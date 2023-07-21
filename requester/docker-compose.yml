@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+    #command: sh -c "sleep 10s ; python3 ./main.py"
+    container_name: c-script
+    depends_on:
+      db:
+        condition: service_healthy
+    
+  db:
+    image: mysql:latest
+    container_name: c-mysql
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      MYSQL_DATABASE: klines_history
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - klines_data:/var/lib/mysql
+
+volumes:
+  klines_data: 
