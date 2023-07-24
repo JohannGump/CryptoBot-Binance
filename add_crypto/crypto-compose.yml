@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  add_crypto:
+    image: cryptobot/add_crypto:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - training_data:/src/training_data
+
+volumes:
+  training_data:
+    external: true

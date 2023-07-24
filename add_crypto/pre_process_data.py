@@ -11,28 +11,37 @@ def timestamp_to_date(timestamp):
     date_str = datetime_obj.strftime('%Y-%m-%d %H:%M:%S')
     return date_str
 
-filename = "/my_server/add_crypto/binance_data.json"
-filename_preprocessed = "/my_server/add_crypto/binance_data_preprocessed.json"
-df = pd.read_json(filename)
-label = {
-    0 : 'Open Time',    # Kline open time
-    1 : 'Open Price',          # Open price
-    2 : 'High Price',          # High price
-    3 : 'Low Price',           # Low price
-    4 : 'Close Price',         # Close price
-    5 : 'Volume',              # Volume
-    6 : 'Close Time',   # Kline Close time
-    7 : 'Quote Asset Volume',  # Quote asset volume
-    8 : 'Number Of Trades',      # Number of trades
-    9 : 'Taker Buy Base',      # Taker buy base asset volume
-    10 : 'Taker Buy Quote',     # Taker buy quote asset volume
-    11 : 'Unused'                # Unused field, ignore
-}
 
+pairs = ['ADAUSDT', 
+         'BTCUSDT', 
+         'BNBUSDT', 
+         'ETHUSDT', 
+         'XRPUSDT']
 
-df = df.rename(label, axis = 1)
-df['Open Time'] = df['Open Time'].apply(lambda x : timestamp_to_date(x))
-df = df.set_index(df['Open Time'])
-#df = df[['Close Price', 'High Price', 'Low Price', 'Open Price', 'Volume', 'Quote Asset Volume']]
-df.to_csv(filename_preprocessed)
+filename = "/src/add_crypto/{pair}_binance_data.json"
+filename_preprocessed = "/src/training_data/{pair}.csv"
+
+for pair in pairs:
+
+    df = pd.read_json(filename.format(pair=pair))
+    label = {
+        0 : 'Open Time',    # Kline open time
+        1 : 'Open Price',          # Open price
+        2 : 'High Price',          # High price
+        3 : 'Low Price',           # Low price
+        4 : 'Close Price',         # Close price
+        5 : 'Volume',              # Volume
+        6 : 'Close Time',   # Kline Close time
+        7 : 'Quote Asset Volume',  # Quote asset volume
+        8 : 'Number Of Trades',      # Number of trades
+        9 : 'Taker Buy Base',      # Taker buy base asset volume
+        10 : 'Taker Buy Quote',     # Taker buy quote asset volume
+        11 : 'Unused'                # Unused field, ignore
+    }
+
+    df = df.rename(label, axis = 1)
+    df['Open Time'] = df['Open Time'].apply(lambda x : timestamp_to_date(x))
+    df = df.set_index(df['Open Time'])
+    #df = df[['Close Price', 'High Price', 'Low Price', 'Open Price', 'Volume', 'Quote Asset Volume']]
+    df.to_csv(filename_preprocessed.format(pair=pair))
 
