@@ -11,4 +11,3 @@ services:
 
 volumes:
   training_data:
-    external: true
