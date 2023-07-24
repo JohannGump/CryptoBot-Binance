@@ -1,0 +1,35 @@
+FROM python:3.9
+
+#ENV
+ENV TZ=Europe/Paris
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Copy in the container
+COPY schemas.py /app/
+COPY main.py /app/
+COPY cronjob /etc/cron.d/cronjob
+COPY entrypoint.sh /app/
+
+# Define working folder
+WORKDIR /app
+
+# Install cron
+RUN apt-get update && apt-get install -y cron tzdata dumb-init
+
+# Create log file
+RUN touch /var/log/cron.log
+
+# Donner les permissions d'exécution au script shell
+RUN chmod +x /app/entrypoint.sh
+
+# Give right permissions to configuration cron file
+RUN chmod 0644 /etc/cron.d/cronjob
+
+# Apply cron job configuration
+RUN crontab /etc/cron.d/cronjob
+
+# Install Python dependencies
+RUN pip install requests mysql-connector-python
+
+# Execute python script and cron
+ENTRYPOINT ["/app/entrypoint.sh"]
