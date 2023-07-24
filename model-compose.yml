@@ -1,0 +1,9 @@
+services:
+  model:
+    image: cryptobot/model:latest
+    build:
+      context: .
+      dockerfile: ./model/Dockerfile
+    volumes:
+      - ./training_data:/src/training_data
+      - ./model_fit:/src/model_fit
