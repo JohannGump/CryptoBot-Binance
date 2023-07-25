@@ -3,6 +3,7 @@ version: '3.9'
 services:
   add_crypto:
     image: add_crypto:latest
+    container_name: add_crypto
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,4 +12,5 @@ services:
 
 volumes:
   training_data:
+    external: true
 

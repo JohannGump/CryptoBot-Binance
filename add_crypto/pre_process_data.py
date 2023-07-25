@@ -1,47 +1,41 @@
 import requests
 import json
 import pandas as pd
-import datetime
+import os
+
+import configuration
+from custo_functions import *
 
 
-def timestamp_to_date(timestamp):
-    # Convertir le timestamp en datetime et le formater en une nouvelle date
-    timestamp_seconds = timestamp / 1000  # Convertir le timestamp en secondes
-    datetime_obj = datetime.datetime.fromtimestamp(timestamp_seconds)
-    date_str = datetime_obj.strftime('%Y-%m-%d %H:%M:%S')
-    return date_str
+#---variable
+pairs = configuration.pairs
+label = configuration.label
+data_JSON_folder = configuration.data_JSON_folder
+filename_JSON = configuration.filename_JSON
+volume_folder = configuration.volume_folder
+filename_preprocessed = configuration.filename_preprocessed
 
 
-pairs = ['ADAUSDT', 
-         'BTCUSDT', 
-         'BNBUSDT', 
-         'ETHUSDT', 
-         'XRPUSDT']
-
-filename = "/src/add_crypto/{pair}_binance_data.json"
-filename_preprocessed = "/src/training_data/{pair}.csv"
 
 for pair in pairs:
+    #read JSON datas and create a dataframe
+    df = pd.read_json(filename_JSON.format(pair=pair))
 
-    df = pd.read_json(filename.format(pair=pair))
-    label = {
-        0 : 'Open Time',    # Kline open time
-        1 : 'Open Price',          # Open price
-        2 : 'High Price',          # High price
-        3 : 'Low Price',           # Low price
-        4 : 'Close Price',         # Close price
-        5 : 'Volume',              # Volume
-        6 : 'Close Time',   # Kline Close time
-        7 : 'Quote Asset Volume',  # Quote asset volume
-        8 : 'Number Of Trades',      # Number of trades
-        9 : 'Taker Buy Base',      # Taker buy base asset volume
-        10 : 'Taker Buy Quote',     # Taker buy quote asset volume
-        11 : 'Unused'                # Unused field, ignore
-    }
-
+    #rename column names
     df = df.rename(label, axis = 1)
+
+    #change date format
     df['Open Time'] = df['Open Time'].apply(lambda x : timestamp_to_date(x))
+
+    #set the date column as index
     df = df.set_index(df['Open Time'])
+
+    #choose the features
     #df = df[['Close Price', 'High Price', 'Low Price', 'Open Price', 'Volume', 'Quote Asset Volume']]
+
+    #save data in the CSV file
     df.to_csv(filename_preprocessed.format(pair=pair))
+
+    #delete the JSON file
+    os.remove(filename_JSON.format(pair=pair))
 
