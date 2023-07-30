@@ -1,9 +1,16 @@
 services:
   model:
+    container_name: cryptobot_model
     image: cryptobot/model:latest
     build:
       context: .
       dockerfile: ./model/Dockerfile
     volumes:
-      - ./training_data:/src/training_data
-      - ./model_fit:/src/model_fit
+      - training_data:/src/training_data
+      - model_fit:/src/model_fit
+
+volumes:
+  training_data:
+    external: true
+  model_fit:
+    name: model_fit
