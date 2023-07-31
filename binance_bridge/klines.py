@@ -22,7 +22,7 @@ import time
 import requests
 import pandas as pd
 from tqdm import tqdm
-from schemas import Symbol, Kline as KlineSchema
+from schemas import Symbol, Kline as KlineSchema, TimeStep
 
 # TODO: Compute Binance exchange rate limit from their API
 # endpoint: https://api.binance.com/api/v3/exchangeInfo
@@ -32,7 +32,7 @@ MBX_ALOW_WEIGHT1M = 1200
 MBX_LAST_REQ_TIME = time.time()
 MBX_LAST_WEIGHT1M = 0
 
-def binance_raw_klines(symbol: Symbol, start_time = None, end_time = None):
+def binance_raw_klines(symbol: Symbol, interval: TimeStep, start_time = None, end_time = None):
     """Requests Binance for 500 klines records.
 
     Note: Due to the Binance request rate limiter, this function may not return
@@ -41,6 +41,8 @@ def binance_raw_klines(symbol: Symbol, start_time = None, end_time = None):
     Parameters
     ----------
     symbol: Currency pair you want klines for
+    inerval: TimeStep
+        the samples time interval (ex. 1 sample per hour)
     start_time: int, optional
         period start, a timestamp in millis
     end_time: int, optional
@@ -68,7 +70,7 @@ def binance_raw_klines(symbol: Symbol, start_time = None, end_time = None):
     endpoint = "https://data-api.binance.vision/api/v3/klines"
     params = {
         "symbol": symbol,
-        "interval": "1h"
+        "interval": interval
     }
 
     if start_time is not None:
@@ -94,7 +96,7 @@ def raw_klines_to_pandas(raw_klines):
     data = data.drop(columns="Unused")
     return data
 
-def historical_klines(symbol: Symbol, amount: int):
+def historical_klines(symbol: Symbol, amount: int, interval: TimeStep):
     """Generates given amount of records by batches of 500.
 
     Batches are returned from recent to older one, starting from the date time now.
@@ -105,6 +107,7 @@ def historical_klines(symbol: Symbol, amount: int):
     ----------
     symbol: Currency pair you want klines for
     amount: Desired amount of records
+    inerval: Samples time interval
 
     Returns
     -------
@@ -112,7 +115,7 @@ def historical_klines(symbol: Symbol, amount: int):
     """
     end_time = None
     while amount > 0:
-        raw_data = binance_raw_klines(symbol, end_time=end_time)
+        raw_data = binance_raw_klines(symbol, interval=interval, end_time=end_time)
         if raw_data is None or len(raw_data) == 0:
             break
         pds_data = raw_klines_to_pandas(raw_data)
@@ -121,7 +124,7 @@ def historical_klines(symbol: Symbol, amount: int):
         amount-= len(pds_data)
         yield pds_data
 
-def get_historical_klines(symbol = Symbol.BTCUSDT, amount = 500):
+def get_historical_klines(symbol = Symbol.BTCUSDT, amount = 500, interval: TimeStep = TimeStep.Hourly):
     """Returns given amount of kline records.
 
     Wraps `historical_klines` generator to concat batches in a single Dataframe.
@@ -129,6 +132,6 @@ def get_historical_klines(symbol = Symbol.BTCUSDT, amount = 500):
     Output a progress bar to indicate progression.
     """
     klines = None
-    for data in tqdm(historical_klines(symbol, amount=amount), total=amount / 500):
+    for data in tqdm(historical_klines(symbol, amount=amount, interval=interval), total=amount / 500):
         klines = data if klines is None else pd.concat([data, klines], ignore_index=True)
     return klines
