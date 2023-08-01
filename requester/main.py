@@ -19,7 +19,7 @@ from schemas import Symbol
 #Current time less 4 hours
 START_TIME = int((datetime.now() - timedelta(hours=4)).timestamp()*1000)
 
-def get_binance_last_klines(symbol: Symbol, interval = "15m", start_time = START_TIME):
+def get_binance_last_klines(symbol: Symbol, interval = "1h", start_time = START_TIME):
 
     endpoint = "https://data-api.binance.vision/api/v3/klines"
     params = {
