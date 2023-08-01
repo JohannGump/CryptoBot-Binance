@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:slim
 
 #ENV
 ENV TZ=Europe/Paris
@@ -7,8 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Copy in the container
 COPY schemas.py /app/
 COPY main.py /app/
+COPY preprocessing.py /app/
 COPY cronjob /etc/cron.d/cronjob
 COPY entrypoint.sh /app/
+COPY create-klines.sh /app/
 
 # Define working folder
 WORKDIR /app
@@ -21,6 +23,7 @@ RUN touch /var/log/cron.log
 
 # Donner les permissions d'exécution au script shell
 RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/create-klines.sh
 
 # Give right permissions to configuration cron file
 RUN chmod 0644 /etc/cron.d/cronjob

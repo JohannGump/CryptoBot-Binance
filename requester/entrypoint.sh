@@ -1,3 +1,4 @@
 #!/bin/bash
 python main.py 
-dumb-init cron -f
+echo '1ere étape OK'
+cron -f

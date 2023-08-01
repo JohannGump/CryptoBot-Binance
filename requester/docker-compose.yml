@@ -9,6 +9,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - preprocessing_data:/app/data
     
   db:
     image: mysql:latest
@@ -31,3 +33,4 @@ services:
 
 volumes:
   klines_data: 
+  preprocessing_data:

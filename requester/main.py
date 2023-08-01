@@ -48,6 +48,23 @@ def get_binance_last_klines(symbol: Symbol, interval = "15m", start_time = START
 
     return formatted_data
 
+def check_duplicates(cursor, data):
+    # Create a list to store records without duplicates
+    unique_data = []
+
+    # Check if the data already exists in the database based on symbol and open time
+    select_query = "SELECT COUNT(*) FROM klines WHERE symbol = %s AND opentime = %s"
+
+    for record in data:
+        symbol, open_time, *_ = record
+        cursor.execute(select_query, (symbol, open_time))
+        result = cursor.fetchone()
+        if result[0] == 0:
+            # Data doesn't exist in the database, add to the list of unique_data
+            unique_data.append(record)
+
+    return unique_data
+
 def insert_data_into_db(data):
     # Connection to database
     connection = mysql.connector.connect(
@@ -76,10 +93,16 @@ def insert_data_into_db(data):
 
     cursor.execute(create_table_query)
 
-    insert_query = "INSERT INTO klines (symbol, opentime, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-
     try:
-        cursor.executemany(insert_query, data)
+
+        insert_query = "INSERT INTO klines (symbol, opentime, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s) "
+         # Check for duplicates before inserting
+        unique_data = check_duplicates(cursor, data)
+
+        # Sort the unique data by symbol and open_time before insertion
+        sorted_data = sorted(unique_data, key=lambda x: (x[0], x[1]))
+
+        cursor.executemany(insert_query, sorted_data)
         connection.commit()
         print("Données insérées avec succès dans la base de données.")
     except Exception as e:
