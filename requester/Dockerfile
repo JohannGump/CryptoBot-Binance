@@ -37,7 +37,7 @@ RUN chmod 0644 /etc/cron.d/cronjob
 RUN crontab /etc/cron.d/cronjob
 
 # Install Python dependencies
-RUN pip install requests mysql-connector-python
+RUN pip install requests mysql-connector-python pytest
 
 # Execute python script and cron
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -33,4 +33,6 @@ services:
 
 volumes:
   klines_data: 
+    name: klines_data
   preprocessing_data:
+    name: preprocessing_data
