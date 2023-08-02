@@ -12,5 +12,6 @@ services:
 
 volumes:
   training_data:
-    external: true
+    #external: true
+    name : training_data
 
