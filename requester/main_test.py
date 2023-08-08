@@ -3,6 +3,9 @@ from main import get_binance_last_klines
 import datetime
 from schemas import Symbol
 
+#print dependencies versions used
+print("pytest version:", pytest.__version__)
+
 # Test cases
 @pytest.mark.parametrize("symbol, interval", [
     (Symbol.ADAUSDT, "1h"),  # Test for Symbol ADAUSDT with interval 1h

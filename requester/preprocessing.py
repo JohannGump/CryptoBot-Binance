@@ -1,14 +1,18 @@
 import mysql.connector
 import csv
+import os
+from dotenv import load_dotenv
 
+#load variables from .env
+load_dotenv()
 
 def sort_klines_by_symbol_and_opentime():
     # Connection to database
     connection = mysql.connector.connect(
         host="db",
         user="root",
-        password="password",
-        database="klines_history",
+        password=os.environ.get('MYSQL_ROOT_PASSWORD_KLINES'),
+        database=os.environ.get('MYSQL_DATABASE_KLINES'),
         port="3306"
     )
 
@@ -39,7 +43,7 @@ if __name__ == "__main__":
         csv_writer = csv.writer(csvfile)
 
         # Write CSV header
-        csv_writer.writerow(['symbol', 'opentime', 'open', 'high', 'low', 'close', 'volume'])
+        csv_writer.writerow(['id', 'symbol', 'opentime', 'open', 'high', 'low', 'close', 'volume'])
 
         print(data)
 

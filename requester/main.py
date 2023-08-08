@@ -2,6 +2,15 @@ import requests
 from datetime import datetime, timedelta
 import mysql.connector
 from schemas import Symbol
+import os
+from dotenv import load_dotenv
+
+#load variables from .env
+load_dotenv()
+
+#print version of dependencies
+print("mysql.connector version:", mysql.connector.__version__)
+print("requests version:", requests.__version__)
 
 """Requests Binance for Klines of the last 4 hours
 
@@ -70,8 +79,8 @@ def insert_data_into_db(data):
     connection = mysql.connector.connect(
         host="db",
         user="root",
-        password="password",
-        database="klines_history",
+        password=os.environ.get('MYSQL_ROOT_PASSWORD_KLINES'),
+        database=os.environ.get('MYSQL_DATABASE_KLINES'),
         port="3306"
     )
 

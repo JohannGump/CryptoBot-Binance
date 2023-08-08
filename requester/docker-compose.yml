@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  requester_network:
+    external: true
+
 services:
   app:
     build:
@@ -11,6 +15,8 @@ services:
         condition: service_healthy
     volumes:
       - preprocessing_data:/app/data
+    networks:
+      - requester_network
     
   db:
     image: mysql:latest
@@ -19,8 +25,8 @@ services:
       - SYS_NICE
     restart: always
     environment:
-      MYSQL_DATABASE: klines_history
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ${MYSQL_DATABASE_KLINES}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
     ports:
       - '3306:3306'
     healthcheck:
@@ -30,9 +36,35 @@ services:
       retries: 5
     volumes:
       - klines_data:/var/lib/mysql
+    networks:
+      - requester_network
+
+  db_predict:
+    image: mysql:latest
+    container_name: c-mysql-predict
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE_PREDICTIONS}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_PREDICTIONS}
+    ports:
+      - '3307:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - predictions_data:/var/lib/mysql
+    networks:
+      - requester_network
 
 volumes:
   klines_data: 
     name: klines_data
   preprocessing_data:
     name: preprocessing_data
+  predictions_data: 
+    name: predictions_data
+

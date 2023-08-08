@@ -1,4 +1,6 @@
 #!/bin/bash
 python main.py 
-echo '1ere étape OK'
+
+echo 'Initialization of klines table - OK'
+
 cron -f
