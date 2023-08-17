@@ -29,7 +29,7 @@ Kline = {
 
 # Samples interval
 class TimeStep(str, Enum):
-    Minutely = '1m'
-    Hourly = '1h'
-    Daily = '1d'
-    Weekly = '1w'
+    MINUTELY = '1m'
+    HOURLY = '1h'
+    DAILY = '1d'
+    WEEKLY = '1w'
