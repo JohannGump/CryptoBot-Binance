@@ -17,11 +17,6 @@ services:
   klines:
     image: mysql:8.1.0
     container_name: klines-db
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 2s
-      timeout: 5s
-      retries: 10
     environment:
       MYSQL_DATABASE: klines
       MYSQL_ROOT_PASSWORD: root
@@ -39,3 +34,8 @@ services:
 volumes:
   klines_data:
     name: klines_data
+
+networks:
+  default:
+    external:
+      name: data-network
