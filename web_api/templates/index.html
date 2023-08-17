@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prédictions</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#predictions_button").click(function() {
+                $.ajax({
+                    url: "/predictions", // Endpoint pour obtenir la dernière prédiction
+                    type: "POST",
+                    dataType: "json",
+                    success: function(data) {
+                        console.log("Data received:", data);
+                        // Mettez à jour le tableau avec les valeurs
+                        if (data.latest_prediction) {   
+                            var row = $("<tr>");
+                            $.each(data.latest_prediction, function(_, value) {
+                                row.append($("<td>").text(value));
+                            });
+                            console.log("row[0]:", row[0])
+                            console.log("row:", row)
+                            $("#table-predictions tbody").empty().append(row[0]);
+                        }
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+        });
+    </script>
+    <!-- Incluez ici vos liens vers les bibliothèques de graphiques, feuilles de style, etc. -->
+</head>
+<body>
+    <h2>Afficher mes prédictions</h2>
+    
+    <button id="predictions_button">Prédictions</button>
+
+    <table class="table table-bordered table-striped" id="table-predictions">
+        <thead class="thead-dark">
+            <tr>
+                <th>ADAUSDT</th>
+                <th>BNBUSDT</th>
+                <th>BTCUSDT</th>
+                <th>ETHUSDT</th>
+                <th>XRPUSDT</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <h2>Graphique des prédictions</h2>
+    <div id="graph_div">{{ graph_html | safe }}</div>
+   
+</body>
+</html>

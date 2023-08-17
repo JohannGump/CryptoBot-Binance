@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  api-container:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    networks:
+      - requester_network
+
+networks:
+  requester_network:
+    external: true
+
