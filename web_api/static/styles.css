@@ -1,0 +1,10 @@
+.green-arrow::before {
+    content: "↑ ";
+    color: green;
+}
+
+.red-arrow::before {
+    content: "↓ ";
+    color: red;
+}
+
