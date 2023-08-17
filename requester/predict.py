@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 import mysql.connector
 import os
 from dotenv import load_dotenv
+import datetime
+import pytz
 
 #load variables from .env
 load_dotenv()
@@ -41,9 +43,17 @@ def get_predictions_and_save_in_database():
     else:
         print("Error:", response.status_code, response.text)
 
+    # Obtenir la date et l'heure actuelles en temps universel
+    current_utc_time = datetime.datetime.now(pytz.utc)
+
     # Définir un DataFrame avec les symboles et les prédictions triées par ordre alphabétique
     sorted_columns = sorted([symbol.name for symbol in Symbol])
     df = pd.DataFrame(data['predictions'], columns=sorted_columns)
+
+    # Ajouter la date en tant que colonne dans le DataFrame
+    df['Datetime'] = current_utc_time
+
+    print(df.head())
 
     # Inscrire les prédictions dans la base de données
     connection_params = {

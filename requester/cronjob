@@ -1,2 +1,2 @@
-*/1 * * * * /app/create-klines.sh >> /var/log/cron.log 2>&1
+0 * * * * /app/create-klines.sh >> /var/log/cron.log 2>&1
 # */1 * * * * /app/main.py >> /var/log/cron.log 2>&1
