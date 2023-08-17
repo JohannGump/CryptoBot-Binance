@@ -19,6 +19,7 @@ process data in between:
 """ 
 #%%
 import time
+from datetime import datetime
 import requests
 import pandas as pd
 from tqdm import tqdm
@@ -32,8 +33,9 @@ MBX_ALOW_WEIGHT1M = 1200
 MBX_LAST_REQ_TIME = time.time()
 MBX_LAST_WEIGHT1M = 0
 
-def binance_raw_klines(symbol: Symbol, interval: TimeStep, start_time = None, end_time = None):
-    """Requests Binance for 500 klines records.
+def binance_raw_klines(symbol: Symbol, interval: TimeStep, start_time = None,
+    end_time = None, limit = 500):
+    """Requests Binance for klines records.
 
     Note: Due to the Binance request rate limiter, this function may not return
     as fast as the API call.
@@ -47,6 +49,8 @@ def binance_raw_klines(symbol: Symbol, interval: TimeStep, start_time = None, en
         period start, a timestamp in millis
     end_time: int, optional
         period end, a timestamp in in millis
+    limit: int, optional, default 500
+        desired number of samples 1 <= limit <= 1000
 
     Returns
     -------
@@ -69,8 +73,8 @@ def binance_raw_klines(symbol: Symbol, interval: TimeStep, start_time = None, en
 
     endpoint = "https://data-api.binance.vision/api/v3/klines"
     params = {
-        "symbol": symbol,
-        "interval": interval
+        "symbol": symbol.name, # TODO: pass symbol.name and interval.value
+        "interval": interval.value
     }
 
     if start_time is not None:
@@ -78,6 +82,9 @@ def binance_raw_klines(symbol: Symbol, interval: TimeStep, start_time = None, en
 
     if end_time is not None:
         params["endTime"] = end_time
+
+    if limit is not None and 1 <= limit <= 1000:
+        params["limit"] = limit
 
     response = requests.get(endpoint, params=params)
     MBX_LAST_WEIGHT1M = int(response.headers["X-MBX-USED-WEIGHT-1M"])
@@ -90,8 +97,10 @@ def raw_klines_to_pandas(raw_klines):
     global KlineSchema
 
     data = pd.DataFrame(raw_klines, columns=KlineSchema.keys())
-    data["Open Time"] = pd.to_datetime(data["Open Time"], unit="ms")
-    data["Close Time"] = pd.to_datetime(data["Close Time"], unit="ms")
+    data["Open Time"] = (data["Open Time"] // 1000).apply(datetime.fromtimestamp)
+    data["Close Time"] = (data["Close Time"] // 1000).apply(datetime.fromtimestamp)
+    # data["Open Time"] = pd.to_datetime(data["Open Time"], unit="ms")
+    # data["Close Time"] = pd.to_datetime(data["Close Time"], unit="ms")
     data = data.astype(KlineSchema)
     data = data.drop(columns="Unused")
     return data
@@ -114,17 +123,18 @@ def historical_klines(symbol: Symbol, amount: int, interval: TimeStep):
     Generator[pandas.Dataframe]
     """
     end_time = None
+    unit = dict(zip(TimeStep, ('T', 'H', 'D', 'W')))[interval]
     while amount > 0:
         raw_data = binance_raw_klines(symbol, interval=interval, end_time=end_time)
         if raw_data is None or len(raw_data) == 0:
             break
         pds_data = raw_klines_to_pandas(raw_data)
-        end_time = pds_data.iloc[0]["Open Time"] - pd.Timedelta(hours=1)
+        end_time = pds_data.iloc[0]["Open Time"] - pd.Timedelta(1, unit)
         end_time = int(end_time.timestamp() * 1000)
         amount-= len(pds_data)
         yield pds_data
 
-def get_historical_klines(symbol = Symbol.BTCUSDT, amount = 500, interval: TimeStep = TimeStep.Hourly):
+def get_historical_klines(symbol = Symbol.BTCUSDT, amount = 500, interval: TimeStep = TimeStep.HOURLY):
     """Returns given amount of kline records.
 
     Wraps `historical_klines` generator to concat batches in a single Dataframe.
