@@ -1,16 +1,23 @@
 services:
   model:
-    container_name: cryptobot_model
+    container_name: cryptobot-model
     image: cryptobot/model:latest
     build:
       context: ${PWD}
       dockerfile: ./model/Dockerfile
     volumes:
-      - training_data:/src/training_data
       - model_fit:/src/model_fit
+    environment:
+      KLINESDB_HOST: klines-db
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: root
+      KLINESDB_DBNAME: klines
 
 volumes:
-  training_data:
-    external: true
   model_fit:
     name: model_fit
+
+networks:
+  default:
+    external:
+      name: data-network
