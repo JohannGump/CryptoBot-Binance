@@ -1,0 +1,41 @@
+services:
+  data:
+    image: cryptobot/data:latest
+    container_name: historical-data
+    build:
+      context: ${PWD}
+      dockerfile: ./data/Dockerfile
+    depends_on:
+      wait-for-db:
+        condition: service_completed_successfully
+    environment:
+      KLINESDB_HOST: klines-db 
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: root
+      KLINESDB_DBNAME: klines
+
+  klines:
+    image: mysql:8.1.0
+    container_name: klines-db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    environment:
+      MYSQL_DATABASE: klines
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - '3306:3306'
+    volumes:
+      - klines_data:/var/lib/mysql
+
+  wait-for-db:
+    image: atkrad/wait4x
+    depends_on:
+      - klines
+    command: tcp klines-db:3306 -t 30s -i 250ms
+
+volumes:
+  klines_data:
+    name: klines_data
