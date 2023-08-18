@@ -1,6 +1,20 @@
 services:
-  model:
-    container_name: cryptobot-model
+  model-serve:
+    container_name: model-serve
+    image: tensorflow/serving:2.13.0
+    depends_on:
+      model-fit:
+        condition: service_completed_successfully
+    command:
+      - --model_config_file=/models/models.config
+      - --model_config_file_poll_wait_seconds=60
+    ports:
+      - 8501:8501
+    volumes:
+      - model_fit:/models/
+
+  model-fit:
+    container_name: model-fit
     image: cryptobot/model:latest
     build:
       context: ${PWD}
@@ -19,5 +33,5 @@ volumes:
 
 networks:
   default:
-    external:
-      name: data-network
+    name: data-network
+    external: true
