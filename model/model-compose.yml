@@ -1,16 +1,37 @@
 services:
-  model:
-    container_name: cryptobot_model
+  model-serve:
+    container_name: model-serve
+    image: tensorflow/serving:2.13.0
+    depends_on:
+      model-fit:
+        condition: service_completed_successfully
+    command:
+      - --model_config_file=/models/models.config
+      - --model_config_file_poll_wait_seconds=60
+    ports:
+      - 8501:8501
+    volumes:
+      - model_fit:/models/
+
+  model-fit:
+    container_name: model-fit
     image: cryptobot/model:latest
     build:
       context: ${PWD}
       dockerfile: ./model/Dockerfile
     volumes:
-      - training_data:/src/training_data
       - model_fit:/src/model_fit
+    environment:
+      KLINESDB_HOST: klines-db
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: root
+      KLINESDB_DBNAME: klines
 
 volumes:
-  training_data:
-    external: true
   model_fit:
     name: model_fit
+
+networks:
+  default:
+    name: data-network
+    external: true

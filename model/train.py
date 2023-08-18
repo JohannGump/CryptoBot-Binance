@@ -6,13 +6,13 @@ Models are saved into ../model_fit/<timestep>.
 Usage
 -----
 Beware that data must be availaible for the given timestep (default to hourly)
-in parent `../training_data/<timestep>` folder.
+in MySQL dedicated DB.
 
 Build an hourly timestep model (execute cmd from the script's folder)
 >>> python train.py
 
 Build a model for another timestep, define the MODEL_TIMESTEP env variable
-to the desired timsetep
+to the desired timestep
 >>> MODEL_TIMESTEP=weekly python train.py
 
 Should give us to saved models
@@ -24,25 +24,41 @@ import os
 
 sys.path.insert(0, os.path.abspath("../"))
 sys.path.insert(0, os.path.abspath("../binance_bridge"))
-from binance_bridge.schemas import Symbol
+from binance_bridge.schemas import Symbol, TimeStep
 import preprocessing as pp
 
+import mysql.connector
 import pandas as pd
 import tensorflow as tf
 
 # Core model training
 # -------------------
 
-TIMESTEP = os.getenv('MODEL_TIMESTEP', 'hourly')
+TIMESTEP = os.getenv('MODEL_TIMESTEP', TimeStep.HOURLY.name).upper()
 INPUT_SEQUENCE_LENGTH = 4
 OUTPUT_TIMESTEP = 4
 TEST_SAMPLES_N = INPUT_SEQUENCE_LENGTH * 3
 
+cnx = mysql.connector.connect(
+    host=os.getenv('KLINESDB_HOST', 'localhost'),
+    user=os.getenv('KLINESDB_USER', 'root'),
+    password=os.getenv('KLINESDB_PASSWORD', 'root'),
+    database=os.getenv('KLINESDB_DBNAME', 'klines'),
+    port=os.getenv('KLINESDB_PORT', '3306'))
+
 feats = None
 targs = None
+
+# table column / feature name mapping
+ftmap = dict(zip([s.replace(' ', '') for s in pp.RAW_FEATURES], pp.RAW_FEATURES))
+
 for symbol in Symbol:
-    asset = pd.read_csv(f'../training_data/{TIMESTEP}/{symbol.value}.csv')[:-TEST_SAMPLES_N] \
-        .set_index('Open Time').sort_index()[pp.RAW_FEATURES]
+    query = "SELECT * FROM hist_klines WHERE TimeStep = %s AND Symbol = %s"
+    asset = pd.read_sql(query, cnx, params=[TIMESTEP, symbol.name], index_col='OpenTime') \
+        .rename(ftmap, axis=1) \
+        .sort_index() \
+        [:-TEST_SAMPLES_N] \
+        [pp.RAW_FEATURES]
     if feats is None:
         feats = pd.DataFrame(index=asset.index)
         targs = pd.DataFrame(index=asset.index)
@@ -81,4 +97,4 @@ saved_model.add(pp.RawSeqToFeatures(sequence_length=INPUT_SEQUENCE_LENGTH))
 saved_model.add(model)
 
 # TODO: handle model version
-saved_model.save(f'../model_fit/{TIMESTEP}/1')
+saved_model.save(f'../model_fit/{TIMESTEP.lower()}/1')
