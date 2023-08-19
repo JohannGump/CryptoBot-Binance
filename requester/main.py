@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 import mysql.connector
-from schemas import Symbol
+from schemas import Symbol, TimeStep
 import os
 from dotenv import load_dotenv
 
@@ -25,15 +25,18 @@ print("requests version:", requests.__version__)
 
 """
 
-#Current time less 4 hours
-START_TIME = int((datetime.now() - timedelta(hours=4)).timestamp()*1000)
+#Current time minus 4 'timestep unit'
+def compute_start_time(interval: TimeStep, delta: int = 4):
+    param = dict(zip(TimeStep, ['minutes', 'hours', 'days', 'weeks']))[interval]
+    param = {param: delta}
+    return int((datetime.now() - timedelta(**param)).timestamp()*1000)
 
-def get_binance_last_klines(symbol: Symbol, interval = "1h", start_time = START_TIME):
+def get_binance_last_klines(symbol: Symbol, interval: TimeStep, start_time: int):
 
     endpoint = "https://data-api.binance.vision/api/v3/klines"
     params = {
         "symbol": symbol,
-        "interval": interval,
+        "interval": interval.value,
         "startTime": start_time
     }
 
@@ -53,7 +56,7 @@ def get_binance_last_klines(symbol: Symbol, interval = "1h", start_time = START_
         close_price = float(entry[4])
         volume = float(entry[5])
 
-        formatted_data.append((symbol, open_time, open_price, high_price, low_price, close_price, volume))
+        formatted_data.append((symbol.name, interval.name, open_time, open_price, high_price, low_price, close_price, volume))
 
     return formatted_data
 
@@ -62,11 +65,11 @@ def check_duplicates(cursor, data):
     unique_data = []
 
     # Check if the data already exists in the database based on symbol and open time
-    select_query = "SELECT COUNT(*) FROM klines WHERE symbol = %s AND opentime = %s"
+    select_query = "SELECT COUNT(*) FROM klines WHERE symbol = %s AND timestep = %s AND opentime = %s"
 
     for record in data:
-        symbol, open_time, *_ = record
-        cursor.execute(select_query, (symbol, open_time))
+        symbol, interval, open_time, *_ = record
+        cursor.execute(select_query, (symbol, interval, open_time))
         result = cursor.fetchone()
         if result[0] == 0:
             # Data doesn't exist in the database, add to the list of unique_data
@@ -85,17 +88,18 @@ def insert_data_into_db(data):
     )
 
     # Create table if not exist
-    create_table_query = """
+    create_table_query = f"""
     CREATE TABLE IF NOT EXISTS klines (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        symbol varchar(255),
-        opentime DATETIME,
-        open FLOAT,
-        high FLOAT,
-        low FLOAT,
-        close FLOAT,
-        volume FLOAT
-    );
+        Symbol enum({','.join([f"'{s.name}'" for s in Symbol])}) NOT NULL,
+        TimeStep enum({','.join([f"'{t.name}'" for t in TimeStep])}) NOT NULL,
+        OpenTime DATETIME NOT NULL,
+        OpenPrice DOUBLE NOT NULL,
+        HighPrice DOUBLE NOT NULL,
+        LowPrice DOUBLE NOT NULL,
+        ClosePrice DOUBLE NOT NULL,
+        Volume DOUBLE NOT NULL,
+        UNIQUE INDEX idx_open_time (Symbol, TimeStep, OpenTime)
+    )
     """
 
     cursor = connection.cursor()
@@ -104,7 +108,7 @@ def insert_data_into_db(data):
 
     try:
 
-        insert_query = "INSERT INTO klines (symbol, opentime, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s) "
+        insert_query = "INSERT INTO klines (Symbol, TimeStep, OpenTime, OpenPrice, HighPrice, LowPrice, ClosePrice, Volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
          # Check for duplicates before inserting
         unique_data = check_duplicates(cursor, data)
 
@@ -122,6 +126,12 @@ def insert_data_into_db(data):
         connection.close()
 
 if __name__ == "__main__":
+    ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
+    if ts not in TimeStep.__members__.keys():
+        raise Exception(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+
+    ts = TimeStep[ts]
+    start_time = compute_start_time(ts)
     for symbol in Symbol:
-        binance_data = get_binance_last_klines(symbol)
+        binance_data = get_binance_last_klines(symbol, ts, start_time)
         insert_data_into_db(binance_data)

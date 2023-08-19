@@ -26,3 +26,10 @@ Kline = {
     'Taker Buy Quote': 'float64',     # Taker buy quote asset volume
     'Unused': 'object'                # Unused field, ignore
 }
+
+# Samples interval
+class TimeStep(str, Enum):
+    MINUTELY = '1m'
+    HOURLY = '1h'
+    DAILY = '1d'
+    WEEKLY = '1w'

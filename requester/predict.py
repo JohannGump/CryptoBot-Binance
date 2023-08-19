@@ -1,7 +1,7 @@
 import pandas as pd
 import requests
 import json
-from schemas import Symbol
+from schemas import Symbol, TimeStep
 import sqlalchemy
 from sqlalchemy import create_engine
 import mysql.connector
@@ -19,12 +19,12 @@ print("SQLAlchemy version:", sqlalchemy.__version__)
 print("mysql.connector version:", mysql.connector.__version__)
 print("requests version:", requests.__version__)
 
-def get_predictions_and_save_in_database():
+def get_predictions_and_save_in_database(timestep: TimeStep):
     # Charger les données depuis le fichier CSV
-    df = pd.read_csv('/app/data/fit_data.csv')
+    df = pd.read_csv(f'/app/data/fit_data_{timestep.name}.csv')
 
     # Supprimer les colonnes 'id', 'symbol' et 'opentime'
-    df = df.drop(columns=['id', 'symbol', 'opentime'])
+    df = df.drop(columns=['symbol', 'opentime'])
 
     # Convertir les données en liste de listes
     data_list = df.values.tolist()
@@ -32,7 +32,7 @@ def get_predictions_and_save_in_database():
     # Ajouter une dimension supplémentaire
     data_list = [data_list]
 
-    API = "http://c-predict:8501/v1/models/hourly:predict"
+    API = f"http://c-predict:8501/v1/models/{timestep.name.lower()}:predict"
     JSON = json.dumps({"instances": data_list})
 
     response = requests.post(API, data=JSON)
@@ -52,6 +52,7 @@ def get_predictions_and_save_in_database():
 
     # Ajouter la date en tant que colonne dans le DataFrame
     df['Datetime'] = current_utc_time
+    df['TimeStep'] = timestep.name
 
     print(df.head())
 
@@ -79,4 +80,8 @@ def get_predictions_and_save_in_database():
     connection.close()
 
 if __name__ == "__main__":
-    get_predictions_and_save_in_database()
+    ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
+    if ts not in TimeStep.__members__.keys():
+        raise Exception(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+
+    get_predictions_and_save_in_database(TimeStep[ts])
