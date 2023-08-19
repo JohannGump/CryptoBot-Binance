@@ -23,6 +23,9 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
     # Charger les données depuis le fichier CSV
     df = pd.read_csv(f'/app/data/fit_data_{timestep.name}.csv')
 
+    # Track last time of sequence
+    l_open_time = df['opentime'].astype('datetime64[ns]').max()
+
     # Supprimer les colonnes 'id', 'symbol' et 'opentime'
     df = df.drop(columns=['symbol', 'opentime'])
 
@@ -50,8 +53,10 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
     sorted_columns = sorted([symbol.name for symbol in Symbol])
     df = pd.DataFrame(data['predictions'], columns=sorted_columns)
 
-    # Ajouter la date en tant que colonne dans le DataFrame
-    df['Datetime'] = current_utc_time
+    # Inference time (InTime) and predicted time (OpenTime)
+    df['InTime'] = current_utc_time
+    unit = dict(zip(TimeStep, ('T', 'H', 'D', 'W')))[timestep]
+    df['OpenTime'] = l_open_time + pd.Timedelta(4, unit=unit)
     df['TimeStep'] = timestep.name
 
     print(df.head())
