@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+
+  data:
+    image: cryptobot/data:latest
+    container_name: historical-data
+    build:
+      context: ${PWD}
+      dockerfile: ./data/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KLINESDB_HOST: db 
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
+      KLINESDB_DBNAME: ${MYSQL_DATABASE_KLINES}
+    networks:
+      - requester_network
+
+  app:
+    image: requester/app:latest
+    build:
+      context: ${PWD}/requester
+    #command: sh -c "sleep 10s ; python3 ./main.py"
+    container_name: c-script
+    depends_on:
+      db:
+        condition: service_healthy
+      model-fit:
+        condition: service_completed_successfully
+    volumes:
+      - preprocessing_data:/app/data
+    networks:
+      - requester_network
+
+  db:
+    image: mysql:latest
+    container_name: db
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE_KLINES}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - klines_data:/var/lib/mysql
+    networks:
+      - requester_network
+
+  db_predict:
+    image: mysql:latest
+    container_name: db_predict
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE_PREDICTIONS}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_PREDICTIONS}
+    ports:
+      - '3307:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - predictions_data:/var/lib/mysql
+    networks:
+      - requester_network
+
+  c-predict:
+    container_name: c-predict
+    image: tensorflow/serving:2.13.0
+    depends_on:
+      model-fit:
+        condition: service_completed_successfully
+    command:
+      - --model_config_file=/models/models.config
+      - --model_config_file_poll_wait_seconds=60
+    ports:
+      - 8501:8501
+    volumes:
+      - model_fit:/models/
+    networks:
+      - requester_network
+
+  model-fit:
+    container_name: model-fit
+    image: cryptobot/model:latest
+    build:
+      context: ${PWD}
+      dockerfile: ./model/Dockerfile
+    volumes:
+      - model_fit:/src/model_fit
+    environment:
+      KLINESDB_HOST: db 
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
+      KLINESDB_DBNAME: ${MYSQL_DATABASE_KLINES}
+    depends_on:
+      data:
+        condition: service_completed_successfully
+    networks:
+      - requester_network
+
+  api-container:
+    image: cryptobot/web-api:latest
+    container_name: web-api
+    build:
+      context: ${PWD}/web_api
+    ports:
+      - "8000:8000"
+    networks:
+      - requester_network
+    depends_on:
+      db_predict:
+        condition: service_healthy
+    
+
+volumes:
+  klines_data: 
+    name: klines_data
+  preprocessing_data:
+    name: preprocessing_data
+  predictions_data: 
+    name: predictions_data
+  model_fit:
+    name: model_fit
+
+networks:
+  requester_network:
+    external: true

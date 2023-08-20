@@ -1,5 +1,5 @@
 #!/bin/bash
-python main.py 
+./create-klines
 
 echo 'Initialization of klines table - OK'
 
