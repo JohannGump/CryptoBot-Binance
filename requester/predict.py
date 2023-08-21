@@ -13,6 +13,13 @@ import pytz
 #load variables from .env
 load_dotenv()
 
+connection_params = {
+    "host": "db_predict",
+    "user": "root",
+    "password": os.environ.get('MYSQL_ROOT_PASSWORD_PREDICTIONS'),
+    "database": os.environ.get('MYSQL_DATABASE_PREDICTIONS'),
+    "port": "3306"
+}
 
 #print version of dependencies
 print("SQLAlchemy version:", sqlalchemy.__version__)
@@ -22,6 +29,9 @@ print("requests version:", requests.__version__)
 def get_predictions_and_save_in_database(timestep: TimeStep):
     # Charger les données depuis le fichier CSV
     df = pd.read_csv(f'/app/data/fit_data_{timestep.name}.csv')
+
+    # Dernières lignes de chaque sequence (pour calcul du prix et date prédite)
+    seq_lasts = df[3::4].set_index('symbol')
 
     # Supprimer les colonnes 'id', 'symbol' et 'opentime'
     df = df.drop(columns=['symbol', 'opentime'])
@@ -50,20 +60,15 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
     sorted_columns = sorted([symbol.name for symbol in Symbol])
     df = pd.DataFrame(data['predictions'], columns=sorted_columns)
 
-    # Ajouter la date en tant que colonne dans le DataFrame
-    df['Datetime'] = current_utc_time
+    # On prend la transposée (symbols en tant qu'index) et on ajoute les
+    # champs nécéssaires (cf. schéma `ensure_predictions_table`)
+    df = df.T.rename_axis('symbol').rename(columns={0: 'PctChange'})
+    df['InTime'] = current_utc_time
+    unit = dict(zip(TimeStep, ('T', 'H', 'D', 'W')))[timestep]
+    df['OpenTime'] = seq_lasts['opentime'].astype('datetime64[ns]') + pd.Timedelta(4, unit=unit)
     df['TimeStep'] = timestep.name
-
-    print(df.head())
-
-    # Inscrire les prédictions dans la base de données
-    connection_params = {
-        "host": "db_predict",
-        "user": "root",
-        "password": os.environ.get('MYSQL_ROOT_PASSWORD_PREDICTIONS'),
-        "database": os.environ.get('MYSQL_DATABASE_PREDICTIONS'),
-        "port": "3306"
-    }
+    df['ClosePrice'] = seq_lasts['close'] * df['PctChange']
+    df = df.reset_index()
 
     # Se connecter à la base de données
     connection = mysql.connector.connect(**connection_params)
@@ -74,14 +79,38 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
                         + connection_params["database"])
 
     # Insérer les prédictions dans la table "predictions"
-    df.to_sql(con=engine, name="predictions", if_exists="append", index=False)
+    try:
+        df.to_sql(con=engine, name="predictions", if_exists="append", index=False)
+    except sqlalchemy.exc.IntegrityError:
+        rc = df.iloc[0]
+        print(f"[Warning] Prédictions déjà existantes: {rc.TimeStep} {rc.OpenTime}")
 
     # Fermer la connexion
     connection.close()
+
+def ensure_predictions_table():
+    """Create MySQL predictions schema if needed."""
+    cnx = mysql.connector.connect(**connection_params)
+    cursor = cnx.cursor()
+    query = f"""
+    CREATE TABLE IF NOT EXISTS predictions (
+        Symbol enum({','.join([f"'{s.name}'" for s in Symbol])}) NOT NULL,
+        TimeStep enum({','.join([f"'{t.name}'" for t in TimeStep])}) NOT NULL,
+        InTime DATETIME NOT NULL,
+        OpenTime DATETIME NOT NULL,
+        PctChange DOUBLE NOT NULL,
+        ClosePrice DOUBLE NOT NULL,
+        UNIQUE INDEX idx_predictions_sto (Symbol, TimeStep, OpenTime)
+    )
+    """
+    cursor.execute(query)
+    cursor.close()
+    cnx.close()
 
 if __name__ == "__main__":
     ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
     if ts not in TimeStep.__members__.keys():
         raise Exception(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
 
+    ensure_predictions_table()
     get_predictions_and_save_in_database(TimeStep[ts])
