@@ -23,9 +23,15 @@ db = mysql.connector.connect(
 @app.get("/", response_class=HTMLResponse)
 def get_home(request: Request):
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM predictions ORDER BY Datetime")
-    results = cursor.fetchall()
+    # Fix temporaire (ref 8bd3bcb)
+    # (re) Formatage resultat (results) du select pour correspondre au code actuel
+    cursor.execute("SELECT * FROM predictions ORDER BY OpenTime, Symbol")
+    raw_results = cursor.fetchall()
     cursor.close()
+    results = []
+    for i in range(len(raw_results) // 5):
+        records = raw_results[i*5:i*5 + 5]
+        results.append([r[4] for r in records] + [records[0][3]])
 
     ada_values = [result[0] for result in results]
     bnb_values = [result[1] for result in results]
