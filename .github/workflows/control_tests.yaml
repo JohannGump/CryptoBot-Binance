@@ -18,7 +18,7 @@ jobs:
           pip install pytest
           pip install fastapi
           pip install pandas
-          pip install mysql
+          pip install mysql.connector
           pip install requests
 
       - name: Run tests
