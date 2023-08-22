@@ -21,6 +21,7 @@ jobs:
           pip install mysql.connector
           pip install requests
           pip install tqdm
+          pip install python-dotenv
 
       - name: Run tests
         run: |
