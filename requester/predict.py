@@ -9,6 +9,10 @@ import os
 from dotenv import load_dotenv
 import datetime
 import pytz
+import logging
+
+logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(module)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
 #load variables from .env
 load_dotenv()
@@ -20,11 +24,6 @@ connection_params = {
     "database": os.environ.get('MYSQL_DATABASE_PREDICTIONS'),
     "port": "3306"
 }
-
-#print version of dependencies
-print("SQLAlchemy version:", sqlalchemy.__version__)
-print("mysql.connector version:", mysql.connector.__version__)
-print("requests version:", requests.__version__)
 
 def get_predictions_and_save_in_database(timestep: TimeStep):
     # Charger les données depuis le fichier CSV
@@ -49,9 +48,9 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
 
     if response.status_code == 200:
         data = response.json()
-        print(data)
     else:
-        print("Error:", response.status_code, response.text)
+        logging.error(f"{timestep.name} predictions error {response.text}")
+        exit(1)
 
     # Obtenir la date et l'heure actuelles en temps universel
     current_utc_time = datetime.datetime.now(pytz.utc)
@@ -81,9 +80,9 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
     # Insérer les prédictions dans la table "predictions"
     try:
         df.to_sql(con=engine, name="predictions", if_exists="append", index=False)
+        logging.info(f"{df.iloc[0].TimeStep} predictions inserted for {df.iloc[0].OpenTime}")
     except sqlalchemy.exc.IntegrityError:
-        rc = df.iloc[0]
-        print(f"[Warning] Prédictions déjà existantes: {rc.TimeStep} {rc.OpenTime}")
+        logging.info(f"{df.iloc[0].TimeStep} predictions already exists for {df.iloc[0].OpenTime}")
 
     # Fermer la connexion
     connection.close()
@@ -110,7 +109,8 @@ def ensure_predictions_table():
 if __name__ == "__main__":
     ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
     if ts not in TimeStep.__members__.keys():
-        raise Exception(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+        logging.error(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+        exit(1)
 
     ensure_predictions_table()
     get_predictions_and_save_in_database(TimeStep[ts])

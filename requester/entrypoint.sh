@@ -1,6 +1,4 @@
 #!/bin/bash
-./create-klines
-
-echo 'Initialization of klines table - OK'
+./create-klines.sh
 
 cron -f

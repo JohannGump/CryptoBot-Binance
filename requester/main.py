@@ -4,13 +4,13 @@ import mysql.connector
 from schemas import Symbol, TimeStep
 import os
 from dotenv import load_dotenv
+import logging
+
+logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(module)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
 #load variables from .env
 load_dotenv()
-
-#print version of dependencies
-print("mysql.connector version:", mysql.connector.__version__)
-print("requests version:", requests.__version__)
 
 """Requests Binance for Klines of the last 4 hours
 
@@ -29,7 +29,7 @@ print("requests version:", requests.__version__)
 def compute_start_time(interval: TimeStep, delta: int = 4):
     param = dict(zip(TimeStep, ['minutes', 'hours', 'days', 'weeks']))[interval]
     param = {param: delta}
-    return int((datetime.now() - timedelta(**param)).timestamp()*1000)
+    return datetime.now() - timedelta(**param)
 
 def get_binance_last_klines(symbol: Symbol, interval: TimeStep, start_time: int):
 
@@ -43,8 +43,8 @@ def get_binance_last_klines(symbol: Symbol, interval: TimeStep, start_time: int)
     response = requests.get(endpoint, params=params)
     if response.status_code == 200:
         data = response.json()
-    else:
-        print("Erreur lors de la requête :", response.status_code)
+    else: 
+        logging.error(f"Request klines from Binance: {response.text}")
         return None
 
     formatted_data = []
@@ -106,6 +106,7 @@ def insert_data_into_db(data):
 
     cursor.execute(create_table_query)
 
+    syts = f"{data[0][0]} {data[0][1]}" # 'Symbol Timestep' values
     try:
 
         insert_query = "INSERT INTO klines (Symbol, TimeStep, OpenTime, OpenPrice, HighPrice, LowPrice, ClosePrice, Volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -115,11 +116,14 @@ def insert_data_into_db(data):
         # Sort the unique data by symbol and open_time before insertion
         sorted_data = sorted(unique_data, key=lambda x: (x[0], x[1]))
 
-        cursor.executemany(insert_query, sorted_data)
-        connection.commit()
-        print("Données insérées avec succès dans la base de données.")
+        if len(sorted_data) == 0:
+            logging.info(f"{syts} up to date ({data[0][2]} to {data[-1][2]})")
+        else:
+            cursor.executemany(insert_query, sorted_data)
+            connection.commit()
+            logging.info(f"{syts} {len(sorted_data)} records inserted ({sorted_data[0][2]} to {sorted_data[-1][2]})")
     except Exception as e:
-        print(f"Erreur lors de l'insertion des données: {e}")
+        logging.error(f"{syts} insert error: {e}")
         connection.rollback()
     finally:
         cursor.close()
@@ -128,10 +132,13 @@ def insert_data_into_db(data):
 if __name__ == "__main__":
     ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
     if ts not in TimeStep.__members__.keys():
-        raise Exception(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+        logging.error(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+        exit(1)
 
     ts = TimeStep[ts]
     start_time = compute_start_time(ts)
     for symbol in Symbol:
-        binance_data = get_binance_last_klines(symbol, ts, start_time)
+        binance_data = get_binance_last_klines(symbol, ts, int(start_time.timestamp()*1000))
+        if not binance_data:
+            exit(1)
         insert_data_into_db(binance_data)
