@@ -30,12 +30,15 @@ TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
 def connect():
     """Returns MySQL connection."""
-    return mysql.connector.connect(
+    try:
+        return mysql.connector.connect(
         host=os.getenv('KLINESDB_HOST', 'localhost'),
         user=os.getenv('KLINESDB_USER', 'root'),
         password=os.getenv('KLINESDB_PASSWORD', 'root'),
         database=os.getenv('KLINESDB_DBNAME', 'klines'),
         port=os.getenv('KLINESDB_PORT', '3306'))
+    except(Exception):
+        return(1)
 
 # Historical data schema
 # ----------------------
