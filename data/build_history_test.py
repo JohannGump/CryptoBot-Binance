@@ -4,3 +4,8 @@ sys.path.insert(0, os.path.abspath("./"))
 sys.path.insert(0, os.path.abspath("./binance_bridge"))
 from binance_bridge.schemas import Symbol, TimeStep
 from binance_bridge.klines import binance_raw_klines, raw_klines_to_pandas
+
+def test_connect():
+    assert(True)
+
+    
