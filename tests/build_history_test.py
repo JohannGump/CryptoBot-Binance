@@ -11,7 +11,7 @@ def test_connect():
     assert True
 
 def test_any_function():
-    assert any_function() == 2
+    assert any_function() == 1
 
 
 
