@@ -24,6 +24,12 @@ sys.path.insert(0, os.path.abspath("./binance_bridge"))
 from binance_bridge.schemas import Symbol, TimeStep
 from binance_bridge.klines import binance_raw_klines, raw_klines_to_pandas
 
+
+# JLEB : test function to test with pytest
+def any_function():
+    return 1
+
+
 # Maximum records allowed per symbol and timestamp
 KLINES_MAX_RECORDS_PER_SYTS = int(os.getenv('KLINES_MAX_RECORDS_PER_SYTS', 100000))
 TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
