@@ -4,6 +4,11 @@ services:
   api-container:
     build:
       context: .
+    environment:
+      MYSQL_HOST_PREDICTIONS: db_predict
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_DATABASE_PREDICTIONS: predictions_history
+      MYSQL_PASSWORD_PREDICTIONS: password
     ports:
       - "8000:8000"
     networks:

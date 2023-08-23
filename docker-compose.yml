@@ -12,10 +12,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      KLINESDB_HOST: db 
+      KLINESDB_HOST: db
       KLINESDB_USER: root
-      KLINESDB_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
-      KLINESDB_DBNAME: ${MYSQL_DATABASE_KLINES}
+      KLINESDB_PASSWORD: password
+      KLINESDB_DBNAME: klines_history
+      KLINES_MAX_RECORDS_PER_SYTS: 5000
     networks:
       - requester_network
 
@@ -23,8 +24,17 @@ services:
     image: requester/app:latest
     build:
       context: ${PWD}/requester
-    #command: sh -c "sleep 10s ; python3 ./main.py"
     container_name: c-script
+    environment:
+      MYSQL_HOST_KLINES: db
+      MYSQL_USER_KLINES: root
+      MYSQL_DATABASE_KLINES: klines_history
+      MYSQL_PASSWORD_KLINES: password
+      MYSQL_HOST_PREDICTIONS: db_predict
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_DATABASE_PREDICTIONS: predictions_history
+      MYSQL_PASSWORD_PREDICTIONS: password
+      PREDICT_SERVER_HOST: c-predict:8501
     depends_on:
       db:
         condition: service_healthy
@@ -42,8 +52,8 @@ services:
       - SYS_NICE
     restart: always
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE_KLINES}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
+      MYSQL_DATABASE: klines_history
+      MYSQL_ROOT_PASSWORD: password
     ports:
       - '3306:3306'
     healthcheck:
@@ -63,8 +73,8 @@ services:
       - SYS_NICE
     restart: always
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE_PREDICTIONS}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_PREDICTIONS}
+      MYSQL_DATABASE: predictions_history
+      MYSQL_ROOT_PASSWORD: password
     ports:
       - '3307:3306'
     healthcheck:
@@ -102,10 +112,10 @@ services:
     volumes:
       - model_fit:/src/model_fit
     environment:
-      KLINESDB_HOST: db 
+      KLINESDB_HOST: db
       KLINESDB_USER: root
-      KLINESDB_PASSWORD: ${MYSQL_ROOT_PASSWORD_KLINES}
-      KLINESDB_DBNAME: ${MYSQL_DATABASE_KLINES}
+      KLINESDB_PASSWORD: password
+      KLINESDB_DBNAME: klines_history
     depends_on:
       data:
         condition: service_completed_successfully
@@ -117,6 +127,11 @@ services:
     container_name: web-api
     build:
       context: ${PWD}/web_api
+    environment:
+      MYSQL_HOST_PREDICTIONS: db_predict
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_DATABASE_PREDICTIONS: predictions_history
+      MYSQL_PASSWORD_PREDICTIONS: password
     ports:
       - "8000:8000"
     networks:

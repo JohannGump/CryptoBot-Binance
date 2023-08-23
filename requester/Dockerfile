@@ -12,7 +12,6 @@ COPY entrypoint.sh /app/
 COPY create-klines.sh /app/
 COPY predict.py /app/
 COPY requirements.txt /app/
-COPY .env /app/
 
 # Define working folder
 WORKDIR /app

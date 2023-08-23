@@ -3,14 +3,10 @@ from datetime import datetime, timedelta
 import mysql.connector
 from schemas import Symbol, TimeStep
 import os
-from dotenv import load_dotenv
 import logging
 
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(module)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
-
-#load variables from .env
-load_dotenv()
 
 """Requests Binance for Klines of the last 4 hours
 
@@ -80,10 +76,10 @@ def check_duplicates(cursor, data):
 def insert_data_into_db(data):
     # Connection to database
     connection = mysql.connector.connect(
-        host="db",
-        user="root",
-        password=os.environ.get('MYSQL_ROOT_PASSWORD_KLINES'),
-        database=os.environ.get('MYSQL_DATABASE_KLINES'),
+        host=os.getenv('MYSQL_HOST_KLINES'),
+        user=os.getenv('MYSQL_USER_KLINES'),
+        password=os.getenv('MYSQL_PASSWORD_KLINES'),
+        database=os.getenv('MYSQL_DATABASE_KLINES'),
         port="3306"
     )
 

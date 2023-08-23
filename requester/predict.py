@@ -6,7 +6,6 @@ import sqlalchemy
 from sqlalchemy import create_engine
 import mysql.connector
 import os
-from dotenv import load_dotenv
 import datetime
 import pytz
 import logging
@@ -14,16 +13,15 @@ import logging
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(module)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
-#load variables from .env
-load_dotenv()
-
 connection_params = {
-    "host": "db_predict",
-    "user": "root",
-    "password": os.environ.get('MYSQL_ROOT_PASSWORD_PREDICTIONS'),
-    "database": os.environ.get('MYSQL_DATABASE_PREDICTIONS'),
+    "host": os.getenv('MYSQL_HOST_PREDICTIONS'),
+    "user": os.getenv('MYSQL_USER_PREDICTIONS'),
+    "password": os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
+    "database": os.getenv('MYSQL_DATABASE_PREDICTIONS'),
     "port": "3306"
 }
+
+PREDICT_SERVER_HOST=os.getenv('PREDICT_SERVER_HOST')
 
 def get_predictions_and_save_in_database(timestep: TimeStep):
     # Charger les données depuis le fichier CSV
@@ -41,7 +39,7 @@ def get_predictions_and_save_in_database(timestep: TimeStep):
     # Ajouter une dimension supplémentaire
     data_list = [data_list]
 
-    API = f"http://c-predict:8501/v1/models/{timestep.name.lower()}:predict"
+    API = f"http://{PREDICT_SERVER_HOST}/v1/models/{timestep.name.lower()}:predict"
     JSON = json.dumps({"instances": data_list})
 
     response = requests.post(API, data=JSON)

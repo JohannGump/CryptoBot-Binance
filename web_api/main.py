@@ -6,6 +6,7 @@ import uvicorn
 import plotly.graph_objs as go
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI()
 
@@ -14,10 +15,10 @@ templates = Jinja2Templates(directory="templates")
 
 #connect to db
 db = mysql.connector.connect(
-    host="db_predict", 
-    user="root",
-    password="password",
-    database="predictions_history"
+    host=os.getenv('MYSQL_HOST_PREDICTIONS'),
+    user=os.getenv('MYSQL_USER_PREDICTIONS'),
+    password=os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
+    database=os.getenv('MYSQL_DATABASE_PREDICTIONS')
 )
 
 @app.get("/", response_class=HTMLResponse)

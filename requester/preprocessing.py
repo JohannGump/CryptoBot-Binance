@@ -1,23 +1,19 @@
 import mysql.connector
 import csv
 import os
-from dotenv import load_dotenv
 from schemas import TimeStep
 import logging
 
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(module)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
-#load variables from .env
-load_dotenv()
-
 def sort_klines_by_symbol_and_opentime(timestep: TimeStep):
     # Connection to database
     connection = mysql.connector.connect(
-        host="db",
-        user="root",
-        password=os.environ.get('MYSQL_ROOT_PASSWORD_KLINES'),
-        database=os.environ.get('MYSQL_DATABASE_KLINES'),
+        host=os.getenv('MYSQL_HOST_KLINES'),
+        user=os.getenv('MYSQL_USER_KLINES'),
+        password=os.getenv('MYSQL_PASSWORD_KLINES'),
+        database=os.getenv('MYSQL_DATABASE_KLINES'),
         port="3306"
     )
 
