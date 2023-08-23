@@ -1,8 +1,9 @@
 name: Control Push
 on: push
 jobs:
-
   setup-env:
+    runns-on ubuntu-latest
+    steps:
     - name: Set up Python
       uses: actions/setup-python@master
       with:
