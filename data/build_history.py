@@ -21,8 +21,8 @@ from tqdm.asyncio import tqdm_asyncio
 import pandas as pd
 sys.path.insert(0, os.path.abspath("./"))
 sys.path.insert(0, os.path.abspath("./binance_bridge"))
-from binance_bridge.schemas import Symbol, TimeStep
-from binance_bridge.klines import binance_raw_klines, raw_klines_to_pandas
+# from binance_bridge.schemas import Symbol, TimeStep
+# from binance_bridge.klines import binance_raw_klines, raw_klines_to_pandas
 
 # Maximum records allowed per symbol and timestamp
 KLINES_MAX_RECORDS_PER_SYTS = int(os.getenv('KLINES_MAX_RECORDS_PER_SYTS', 100000))
