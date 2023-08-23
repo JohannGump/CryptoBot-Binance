@@ -7,7 +7,7 @@ jobs:
     name: unit tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout on master
+      - name: Checkout on github_action
         uses: actions/checkout@v3
 
       - name: Set up Python
