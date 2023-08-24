@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: model-fit
+  name: model-fit
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: model-fit
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/requester-network: "true"
+        io.kompose.service: model-fit
+    spec:
+      containers:
+        - env:
+            - name: KLINESDB_DBNAME
+              value: klines_history
+            - name: KLINESDB_HOST
+              value: db
+            - name: KLINESDB_PASSWORD
+              value: password
+            - name: KLINESDB_USER
+              value: root
+          image: cryptobot/model:latest
+          name: model-fit
+          resources: {}
+          volumeMounts:
+            - mountPath: /src/model_fit
+              name: model-fit
+      restartPolicy: Always
+      volumes:
+        - name: model-fit
+          persistentVolumeClaim:
+            claimName: model-fit
+status: {}

@@ -17,7 +17,7 @@ connection_params = {
     "host": os.getenv('MYSQL_HOST_PREDICTIONS'),
     "user": os.getenv('MYSQL_USER_PREDICTIONS'),
     "password": os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
-    "database": os.getenv('MYSQL_DATABASE_PREDICTIONS'),
+    "database": os.getenv('MYSQL_DATABASE_PREDICTIONS'), 
     "port": "3306"
 }
 

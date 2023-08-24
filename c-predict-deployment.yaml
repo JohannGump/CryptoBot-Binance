@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: c-predict
+  name: c-predict
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: c-predict
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/requester-network: "true"
+        io.kompose.service: c-predict
+    spec:
+      containers:
+        - args:
+            - --model_config_file=/models/models.config
+            - --model_config_file_poll_wait_seconds=60
+          image: tensorflow/serving:2.13.0
+          name: c-predict
+          ports:
+            - containerPort: 8501
+              hostPort: 8501
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /models
+              name: model-fit
+      restartPolicy: Always
+      volumes:
+        - name: model-fit
+          persistentVolumeClaim:
+            claimName: model-fit
+status: {}

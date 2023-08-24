@@ -66,9 +66,9 @@ services:
     networks:
       - requester_network
 
-  db_predict:
+  db-predict:
     image: mysql:latest
-    container_name: db_predict
+    container_name: db-predict
     cap_add:
       - SYS_NICE
     restart: always
@@ -137,7 +137,7 @@ services:
     networks:
       - requester_network
     depends_on:
-      db_predict:
+      db-predict:
         condition: service_healthy
     
 

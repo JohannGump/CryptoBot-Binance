@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: app
+  name: app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: app
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/requester-network: "true"
+        io.kompose.service: app
+    spec:
+      containers:
+        - image: requester/app:latest
+          name: c-script
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/data
+              name: preprocessing-data
+      restartPolicy: Always
+      volumes:
+        - name: preprocessing-data
+          persistentVolumeClaim:
+            claimName: preprocessing-data
+status: {}
