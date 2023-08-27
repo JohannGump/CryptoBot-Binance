@@ -52,7 +52,7 @@ targs = None
 # table column / feature name mapping
 ftmap = dict(zip([s.replace(' ', '') for s in pp.RAW_FEATURES], pp.RAW_FEATURES))
 
-for symbol in Symbol:
+for symbol in sorted(Symbol):
     query = "SELECT * FROM hist_klines WHERE TimeStep = %s AND Symbol = %s"
     asset = pd.read_sql(query, cnx, params=[TIMESTEP, symbol.name], index_col='OpenTime') \
         .rename(ftmap, axis=1) \
