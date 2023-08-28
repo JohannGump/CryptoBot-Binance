@@ -26,7 +26,16 @@ spec:
         io.kompose.service: api-container
     spec:
       containers:
-        - image: cryptobot/web-api:latest
+        - env:
+            - name: MYSQL_DATABASE_PREDICTIONS
+              value: klines_history
+            - name: MYSQL_HOST_PREDICTIONS
+              value: db
+            - name: MYSQL_PASSWORD_PREDICTIONS
+              value: password
+            - name: MYSQL_USER_PREDICTIONS
+              value: root
+          image: cryptobot/web-api:latest
           name: web-api
           ports:
             - containerPort: 8000

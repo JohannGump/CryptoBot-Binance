@@ -27,13 +27,32 @@ spec:
         io.kompose.service: app
     spec:
       containers:
-        - image: requester/app:latest
+        - env:
+            - name: MYSQL_DATABASE_KLINES
+              value: klines_history
+            - name: MYSQL_DATABASE_PREDICTIONS
+              value: klines_history
+            - name: MYSQL_HOST_KLINES
+              value: db
+            - name: MYSQL_HOST_PREDICTIONS
+              value: db
+            - name: MYSQL_PASSWORD_KLINES
+              value: password
+            - name: MYSQL_PASSWORD_PREDICTIONS
+              value: password
+            - name: MYSQL_USER_KLINES
+              value: root
+            - name: MYSQL_USER_PREDICTIONS
+              value: root
+            - name: PREDICT_SERVER_HOST
+              value: c-predict:8501
+          image: requester/app:latest
           name: c-script
           resources: {}
           volumeMounts:
             - mountPath: /app/data
               name: preprocessing-data
-      restartPolicy: Always
+      restartPolicy: Never
       volumes:
         - name: preprocessing-data
           persistentVolumeClaim:

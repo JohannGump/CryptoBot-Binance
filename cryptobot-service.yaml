@@ -10,6 +10,7 @@ spec:
       targetPort: 8000
   selector:
     app: api-container
+  type: ClusterIP
 status:
   loadBalancer: {}
 ---
@@ -25,21 +26,6 @@ spec:
       targetPort: 8501
   selector:
     app: c-predict
-status:
-  loadBalancer: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: db-predict
-  namespace: default
-spec:
-  ports:
-    - name: "3307"
-      port: 3307
-      targetPort: 3306
-  selector:
-    app: db-predict
 status:
   loadBalancer: {}
 ---

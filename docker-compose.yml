@@ -30,9 +30,9 @@ services:
       MYSQL_USER_KLINES: root
       MYSQL_DATABASE_KLINES: klines_history
       MYSQL_PASSWORD_KLINES: password
-      MYSQL_HOST_PREDICTIONS: db_predict
+      MYSQL_HOST_PREDICTIONS: db
       MYSQL_USER_PREDICTIONS: root
-      MYSQL_DATABASE_PREDICTIONS: predictions_history
+      MYSQL_DATABASE_PREDICTIONS: klines_history
       MYSQL_PASSWORD_PREDICTIONS: password
       PREDICT_SERVER_HOST: c-predict:8501
     depends_on:
@@ -63,27 +63,6 @@ services:
       retries: 5
     volumes:
       - klines_data:/var/lib/mysql
-    networks:
-      - requester_network
-
-  db-predict:
-    image: mysql:latest
-    container_name: db-predict
-    cap_add:
-      - SYS_NICE
-    restart: always
-    environment:
-      MYSQL_DATABASE: predictions_history
-      MYSQL_ROOT_PASSWORD: password
-    ports:
-      - '3307:3306'
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - predictions_data:/var/lib/mysql
     networks:
       - requester_network
 
@@ -128,19 +107,18 @@ services:
     build:
       context: ${PWD}/web_api
     environment:
-      MYSQL_HOST_PREDICTIONS: db_predict
+      MYSQL_HOST_PREDICTIONS: db
       MYSQL_USER_PREDICTIONS: root
-      MYSQL_DATABASE_PREDICTIONS: predictions_history
+      MYSQL_DATABASE_PREDICTIONS: klines_history
       MYSQL_PASSWORD_PREDICTIONS: password
     ports:
       - "8000:8000"
     networks:
       - requester_network
     depends_on:
-      db-predict:
+      db:
         condition: service_healthy
     
-
 volumes:
   klines_data: 
     name: klines_data

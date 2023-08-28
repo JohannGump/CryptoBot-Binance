@@ -65,7 +65,7 @@ def get_home(request: Request):
 @app.post("/predictions", response_class=JSONResponse)
 async def get_predictions(request: Request, latest_prediction: list = Form([])):
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM predictions ORDER BY Datetime DESC LIMIT 1")
+    cursor.execute("SELECT * FROM predictions ORDER BY OpenTime DESC LIMIT 1")
     latest_prediction = cursor.fetchone()
     cursor.close()
     return {"latest_prediction": latest_prediction}

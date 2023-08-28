@@ -35,6 +35,8 @@ spec:
               value: password
             - name: KLINESDB_USER
               value: root
+            - name: KLINES_MAX_RECORDS_PER_SYTS
+              value: "5000"
           image: cryptobot/data:latest
           name: historical-data
           resources: {}
