@@ -57,31 +57,3 @@ spec:
       targetPort: 80
 status:
   loadBalancer: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: data
-spec:
-  selector:
-    app: data
-  ports:
-    - protocol: TCP
-      port: 80 
-      targetPort: 80
-status:
-  loadBalancer: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: model-fit
-spec:
-  selector:
-    app: model-fit
-  ports:
-    - protocol: TCP
-      port: 80  
-      targetPort: 80 
-status:
-  loadBalancer: {}
