@@ -15,7 +15,7 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: 16
-        
+
     - name: Checkout repository
       uses: actions/checkout@v2
 
@@ -26,4 +26,4 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f /kubernetes/cryptobot-deployment.yaml
+        kubectl apply -f kubernetes/cryptobot-deployment.yaml
