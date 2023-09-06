@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-minutely
+spec:
+  schedule: "*/1 * * * *"  # Exécution toutes les minutes
+  startingDeadlineSeconds: 1 # Démarrage immédiat
+  jobTemplate:
+    metadata:
+      labels: 
+        cron-job-name: cronjob-minutely
+    spec:
+      backoffLimit: 4
+      template:
+        metadata:
+          labels:
+            cron-job-name: cronjob-minutely
+        spec:
+          containers:
+            - name: minutely-task
+              image: johanngump/requester-app:latest
+              env:
+                - name: TIMESTEP
+                  value: minutely
+                - name: MYSQL_DATABASE_KLINES
+                  value: klines_history
+                - name: MYSQL_DATABASE_PREDICTIONS
+                  value: klines_history
+                - name: MYSQL_HOST_KLINES
+                  value: db
+                - name: MYSQL_HOST_PREDICTIONS
+                  value: db
+                - name: MYSQL_PASSWORD_KLINES
+                  value: password
+                - name: MYSQL_PASSWORD_PREDICTIONS
+                  value: password
+                - name: MYSQL_USER_KLINES
+                  value: root
+                - name: MYSQL_USER_PREDICTIONS
+                  value: root
+                - name: PREDICT_SERVER_HOST
+                  value: c-predict:8501
+              resources: {}
+              volumeMounts:
+                - mountPath: /log
+                  name: log-data
+                - mountPath: /app/data
+                  name: preprocessing-data
+              command: ["/bin/sh", "-c"]
+              args: ["/app/entrypoint.sh >> /log/requesterLogFile.log 2>&1"]
+          volumes:
+            - name: log-data
+              persistentVolumeClaim:
+                claimName: log-data
+            - name: preprocessing-data
+              persistentVolumeClaim:
+                claimName: preprocessing-data
+          restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 1  # Garder uniquement le dernier job réussi
+  failedJobsHistoryLimit: 1      # Garder uniquement le dernier job échoué
