@@ -3,7 +3,8 @@ name: Kubernetes Deployment
 on:
   push:
     branches:
-      - [kub, dev]
+      - kub
+      - dev
 
 jobs:
   deploy:
