@@ -1,0 +1,23 @@
+name: Kubernetes Deployment
+
+on:
+  push:
+    branches:
+      - [kub, dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Kubernetes CLI
+      uses: azure/setup-kubectl@v1
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}  # Configurez les secrets pour votre configuration kubectl
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f /kubernetes/cryptobot-deployment.yaml
