@@ -1,7 +1,10 @@
 import pytest
 from main import get_binance_last_klines
 import datetime
-from schemas import Symbol
+import os
+from schemas import Symbol, TimeStep
+import logging
+from datetime import datetime, timedelta
 
 #print dependencies versions used
 print("pytest version:", pytest.__version__)
@@ -13,10 +16,24 @@ print("pytest version:", pytest.__version__)
     ("INVALID SYMBOL", "4h"),  # Test for Symbol ETHUSDT with interval 4h
 ])
 
+
+def compute_start_time(interval: TimeStep, delta: int = 4):
+    param = dict(zip(TimeStep, ['minutes', 'hours', 'days', 'weeks']))[interval]
+    param = {param: delta}
+    return datetime.now() - timedelta(**param)
+
 # Test cases
-def test_get_binance_last_klines_default_start_time(symbol, interval):
+def test_get_binance_last_klines_default_start_time(symbol, ts):
     
-    data = get_binance_last_klines(symbol, interval)
+    ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
+    if ts not in TimeStep.__members__.keys():
+        logging.error(f"'{ts}' is not a valid timestep, please use one of {[t.name for t in TimeStep]}")
+        exit(1)
+
+    ts = TimeStep[ts]
+    start_time = compute_start_time(ts)
+
+    data = get_binance_last_klines(symbol, ts, int(start_time.timestamp()*1000))
 
     if symbol == "INVALID SYMBOL":
         assert data is None
@@ -30,9 +47,9 @@ def test_get_binance_last_klines_default_start_time(symbol, interval):
         assert isinstance(data, list)
 
         # Check that we collect the good number of data points
-        if interval == "1h":
+        if ts == "1h":
             assert len(data) == 4
-        elif interval == "1m":
+        elif ts == "1m":
             assert len(data) == 240
 
         # Check if each entry in data is a tuple with 7 elements (symbol, open_time, open_price, high_price, low_price, close_price, volume)
