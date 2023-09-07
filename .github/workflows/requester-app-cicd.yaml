@@ -1,0 +1,51 @@
+name: Build, Test, and Push Requester App
+
+on:
+  push:
+    branches:
+      - kub
+      - dev
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Test Docker image
+      run: |
+        # Execute unitary tests
+        cd requester
+        pip install -r requirements.txt
+        pytest main_test.py
+      continue-on-error: true  # Cette option permet de poursuivre même si les tests échouent.
+
+  build_and_push:
+    name: Build and Push
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build & Push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: requester/Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_HUB_USER }}/requester-app:${{ github.sha }}
+          ${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
+        cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
+        cache-to: type=inline
