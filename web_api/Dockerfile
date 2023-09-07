@@ -1,14 +1,17 @@
 FROM python:slim
 
-WORKDIR /app
+ENV TZ=Europe/Paris
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y tzdata
 
 COPY requirements.txt /app/
 COPY main.py /app/
 COPY templates /app/templates
 COPY static /app/static
 
+WORKDIR /app
 RUN pip install -r requirements.txt
-RUN apt-get update && apt-get install -y nano
 
 EXPOSE 8000
 
