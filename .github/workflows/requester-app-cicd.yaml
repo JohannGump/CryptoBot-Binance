@@ -56,7 +56,7 @@ jobs:
         file: requester/Dockerfile
         push: true
         tags: |
-          ${{ env.DOCKER_HUB_USER }}/requester-app:${{ github.sha }}
+          #${{ env.DOCKER_HUB_USER }}/requester-app:${{ github.sha }}
           ${{ env.DOCKER_HUB_USER }}/requester-app:latest
         cache-from: type=registry,ref=${{ env.DOCKER_HUB_USER }}/requester-app:latest
         cache-to: type=inline
