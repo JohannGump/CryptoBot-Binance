@@ -23,7 +23,7 @@ def compute_start_time(interval: TimeStep, delta: int = 4):
     return datetime.now() - timedelta(**param)
 
 # Test cases
-def test_get_binance_last_klines_default_start_time(symbol, ts):
+def test_get_binance_last_klines_default_start_time(symbol: Symbol, ts: TimeStep, start_time: int):
     
     ts = os.getenv('TIMESTEP', TimeStep.HOURLY.name).upper()
     if ts not in TimeStep.__members__.keys():
