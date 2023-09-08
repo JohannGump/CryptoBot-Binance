@@ -35,8 +35,8 @@ import tensorflow as tf
 # -------------------
 
 TIMESTEP = os.getenv('MODEL_TIMESTEP', TimeStep.HOURLY.name).upper()
-INPUT_SEQUENCE_LENGTH = 4
-OUTPUT_TIMESTEP = 4
+INPUT_SEQUENCE_LENGTH = pp.MODEL_INPUTSEQ_LENGTH
+OUTPUT_TIMESTEP = pp.MODEL_OUTPUT_SPAN
 TEST_SAMPLES_N = INPUT_SEQUENCE_LENGTH * 3
 
 cnx = mysql.connector.connect(
@@ -52,7 +52,7 @@ targs = None
 # table column / feature name mapping
 ftmap = dict(zip([s.replace(' ', '') for s in pp.RAW_FEATURES], pp.RAW_FEATURES))
 
-for symbol in Symbol:
+for symbol in sorted(Symbol):
     query = "SELECT * FROM hist_klines WHERE TimeStep = %s AND Symbol = %s"
     asset = pd.read_sql(query, cnx, params=[TIMESTEP, symbol.name], index_col='OpenTime') \
         .rename(ftmap, axis=1) \
@@ -91,10 +91,11 @@ history = model.fit(Ds, epochs=1)
 # Saved in SavedModel's format to support processing layers
 # (https://github.com/keras-team/keras/issues/15348#issuecomment-974747528)
 
+input_shape = (len(Symbol), INPUT_SEQUENCE_LENGTH, len(pp.RAW_FEATURES))
 saved_model = tf.keras.models.Sequential()
-saved_model.add(tf.keras.Input(shape=(INPUT_SEQUENCE_LENGTH, len(Symbol))))
-saved_model.add(pp.RawSeqToFeatures(sequence_length=INPUT_SEQUENCE_LENGTH))
+saved_model.add(pp.RawSeqToFeatures(symbol_count=len(Symbol), sequence_length=INPUT_SEQUENCE_LENGTH, raw_feature_count=len(pp.RAW_FEATURES)))
 saved_model.add(model)
 
 # TODO: handle model version
+saved_model.build(input_shape)
 saved_model.save(f'../model_fit/{TIMESTEP.lower()}/1')

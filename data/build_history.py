@@ -19,10 +19,16 @@ from datetime import datetime
 import asyncio
 from tqdm.asyncio import tqdm_asyncio
 import pandas as pd
-sys.path.insert(0, os.path.abspath("../"))
-sys.path.insert(0, os.path.abspath("../binance_bridge"))
+sys.path.insert(0, os.path.abspath("./"))
+sys.path.insert(0, os.path.abspath("./binance_bridge"))
 from binance_bridge.schemas import Symbol, TimeStep
 from binance_bridge.klines import binance_raw_klines, raw_klines_to_pandas
+
+
+# JLEB : test function to test with pytest
+def any_function():
+    return 1
+
 
 # Maximum records allowed per symbol and timestamp
 KLINES_MAX_RECORDS_PER_SYTS = int(os.getenv('KLINES_MAX_RECORDS_PER_SYTS', 100000))
@@ -31,11 +37,12 @@ TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 def connect():
     """Returns MySQL connection."""
     return mysql.connector.connect(
-        host=os.getenv('KLINESDB_HOST', 'localhost'),
-        user=os.getenv('KLINESDB_USER', 'root'),
-        password=os.getenv('KLINESDB_PASSWORD', 'root'),
-        database=os.getenv('KLINESDB_DBNAME', 'klines'),
-        port=os.getenv('KLINESDB_PORT', '3306'))
+    host=os.getenv('KLINESDB_HOST', 'localhost'),
+    user=os.getenv('KLINESDB_USER', 'root'),
+    password=os.getenv('KLINESDB_PASSWORD', 'root'),
+    database=os.getenv('KLINESDB_DBNAME', 'klines'),
+    port=os.getenv('KLINESDB_PORT', '3306'))
+
 
 # Historical data schema
 # ----------------------
@@ -54,10 +61,6 @@ CREATE TABLE IF NOT EXISTS hist_klines (
 )
 """
 
-cnx = connect()
-cursor = cnx.cursor()
-cursor.execute(query)
-cursor.close()
 
 # Utils / defs
 # ----------------------
@@ -160,74 +163,84 @@ def etl_historical_klines(deltas):
     asyncio.run(run(deltas))
     cnx.close()
 
-# Load / update historical data
-# -----------------------------
-# We build a table of deltas 'oldest open time' (StartTime) - 'today' (EndTime)
-# and intersects it with already stored data.
 
-# Deltas table
-print("Computes times deltas from Binance API...")
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    future = executor.submit(oldests_open_times)
-    open_times = future.result()
 
-deltas = pd.DataFrame(open_times, columns=['TimeStep', 'Symbol', 'OpenTime'])
-deltas = deltas.groupby('TimeStep')['OpenTime'].max()
-mxrecs = (TODAY - deltas) \
-    .to_frame('delta') \
-    .apply(lambda x: x.delta.total_seconds() // timestep_to_seconds(x.name), axis=1)
-mxrecs = mxrecs.where(
-    mxrecs < KLINES_MAX_RECORDS_PER_SYTS,
-    other=KLINES_MAX_RECORDS_PER_SYTS)
-deltas = deltas.to_frame().assign(
-    StartTime=(
-        mxrecs.to_frame('nrecs').apply(
-            lambda x: TODAY - pd.Timedelta(x.nrecs, timestep_delta_unit(x.name)),
-            axis=1)),
-    EndTime=TODAY)
-deltas = deltas.rename(index={ts:ts.name for ts in TimeStep})
 
-# Stored data
-cnx = connect()
-query = """
-SELECT TimeStep, Symbol,
-       MIN(OpenTime) 'StartTime', MAX(OpenTime) 'EndTime',
-       COUNT(*) 'TotalRecs'
-  FROM hist_klines
- GROUP BY TimeStep, Symbol
-"""
-records = pd.read_sql_query(query, cnx, index_col=['TimeStep', 'Symbol'])
-cnx.close()
+if __name__ == "__main__":
+    cnx = connect()
+    cursor = cnx.cursor()
+    cursor.execute(query)
+    cursor.close()
 
-records = pd.DataFrame(
-    index=pd.MultiIndex.from_product(
-        [[ts.name for ts in TimeStep], [sy.name for sy in Symbol]],
-        names=['TimeStep', 'Symbol'])) \
-    .join(records) \
-    .astype({'StartTime': 'datetime64[ns]', 'EndTime': 'datetime64[ns]'})
+    # Load / update historical data
+    # -----------------------------
+    # We build a table of deltas 'oldest open time' (StartTime) - 'today' (EndTime)
+    # and intersects it with already stored data.
 
-# Intersect deltas with stored data
-deltas = records.reset_index() \
-    .groupby(['TimeStep']) \
-    ['StartTime'].max() \
-    .fillna(deltas['StartTime']) \
-    .to_frame() \
-    .join(deltas.EndTime)
+    # Deltas table
+    print("Computes times deltas from Binance API...")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(oldests_open_times)
+        open_times = future.result()
 
-# Build the list of data to load / update
-toloads = []
-for ts, delta in deltas.iterrows():
-    for symbol in Symbol:
-        rec = records.xs((ts, symbol.name))
-        if rec.EndTime is not pd.NaT:
-            if rec.EndTime != delta.EndTime:
-                print(f"Update {ts} {symbol.name} from {rec.EndTime} to {delta.EndTime}")
-                toloads.append((TimeStep[ts], symbol, rec.EndTime, delta.EndTime))
-        else:
-            print(f"Load {ts} {symbol.name} from {delta.StartTime} to {delta.EndTime}")
-            toloads.append((TimeStep[ts], symbol, delta.StartTime, delta.EndTime))
+    deltas = pd.DataFrame(open_times, columns=['TimeStep', 'Symbol', 'OpenTime'])
+    deltas = deltas.groupby('TimeStep')['OpenTime'].max()
+    mxrecs = (TODAY - deltas) \
+        .to_frame('delta') \
+        .apply(lambda x: x.delta.total_seconds() // timestep_to_seconds(x.name), axis=1)
+    mxrecs = mxrecs.where(
+        mxrecs < KLINES_MAX_RECORDS_PER_SYTS,
+        other=KLINES_MAX_RECORDS_PER_SYTS)
+    deltas = deltas.to_frame().assign(
+        StartTime=(
+            mxrecs.to_frame('nrecs').apply(
+                lambda x: TODAY - pd.Timedelta(x.nrecs, timestep_delta_unit(x.name)),
+                axis=1)),
+        EndTime=TODAY)
+    deltas = deltas.rename(index={ts:ts.name for ts in TimeStep})
 
-# Trigger load in batches of len(Symbol)
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    for deltas in [toloads[i:i + len(Symbol)] for i in range(0, len(toloads), len(Symbol))]:
-        future = executor.submit(etl_historical_klines, deltas)
+    # Stored data
+    cnx = connect()
+    query = """
+    SELECT TimeStep, Symbol,
+        MIN(OpenTime) 'StartTime', MAX(OpenTime) 'EndTime',
+        COUNT(*) 'TotalRecs'
+    FROM hist_klines
+    GROUP BY TimeStep, Symbol
+    """
+    records = pd.read_sql_query(query, cnx, index_col=['TimeStep', 'Symbol'])
+    cnx.close()
+
+    records = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [[ts.name for ts in TimeStep], [sy.name for sy in Symbol]],
+            names=['TimeStep', 'Symbol'])) \
+        .join(records) \
+        .astype({'StartTime': 'datetime64[ns]', 'EndTime': 'datetime64[ns]'})
+
+    # Intersect deltas with stored data
+    deltas = records.reset_index() \
+        .groupby(['TimeStep']) \
+        ['StartTime'].max() \
+        .fillna(deltas['StartTime']) \
+        .to_frame() \
+        .join(deltas.EndTime)
+
+    # Build the list of data to load / update
+    toloads = []
+    for ts, delta in deltas.iterrows():
+        for symbol in Symbol:
+            rec = records.xs((ts, symbol.name))
+            if rec.EndTime is not pd.NaT:
+                if rec.EndTime != delta.EndTime:
+                    print(f"Update {ts} {symbol.name} from {rec.EndTime} to {delta.EndTime}")
+                    toloads.append((TimeStep[ts], symbol, rec.EndTime, delta.EndTime))
+            else:
+                print(f"Load {ts} {symbol.name} from {delta.StartTime} to {delta.EndTime}")
+                toloads.append((TimeStep[ts], symbol, delta.StartTime, delta.EndTime))
+
+    # Trigger load in batches of len(Symbol)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for deltas in [toloads[i:i + len(Symbol)] for i in range(0, len(toloads), len(Symbol))]:
+            future = executor.submit(etl_historical_klines, deltas)
+

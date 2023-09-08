@@ -10,9 +10,12 @@ ascending order (in respect with the underlying model)
     [<Open Price>, <High Price>, <Low Price>, <Close Price>, <Volume>]
 """
 
+import os
 import pandas as pd
 import tensorflow as tf
 
+MODEL_INPUTSEQ_LENGTH = int(os.getenv('MODEL_INPUTSEQ_LENGTH', 4))
+MODEL_OUTPUT_SPAN = int(os.getenv('MODEL_OUTPUT_SPAN', 4))
 RAW_FEATURES = ['Open Price', 'High Price', 'Low Price', 'Close Price', 'Volume']
 
 @tf.function(input_signature=[tf.TensorSpec(shape=None, dtype=tf.float32)])
@@ -76,11 +79,16 @@ class RawSeqToFeatures(tf.keras.layers.Layer):
     Transform raw input to input features used by the model.
     See README for the used raw input format.
     """
-    def __init__(self, sequence_length: int = 4):
+    def __init__(self, symbol_count: int, sequence_length: int, raw_feature_count: int):
         super(RawSeqToFeatures, self).__init__()
+        self._symbol_count = symbol_count
         self._sequence_length = sequence_length
+        self._raw_feature_count = raw_feature_count
 
     def call(self, x):
+        tf.debugging.assert_shapes(
+            [(x, (self._symbol_count, self._sequence_length, self._raw_feature_count))],
+            message="Wrong input shape")
         return self._compute_features(x)
 
     def _compute_features(self, x):
@@ -92,4 +100,8 @@ class RawSeqToFeatures(tf.keras.layers.Layer):
         return tf.reshape(feats, (feats.shape[0], -1))
 
     def get_config(self):
-        return {"sequence_length": self._sequence_length}
+        return {
+            'symbol_count': self._symbol_count,
+            'sequence_length': self._sequence_length,
+            'raw_feature_count': self._raw_feature_count
+        }

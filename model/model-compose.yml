@@ -18,7 +18,7 @@ services:
     image: cryptobot/model:latest
     build:
       context: ${PWD}
-      dockerfile: ./model/Dockerfile
+      dockerfile: ./model/Dockerfile.model-fit
     volumes:
       - model_fit:/src/model_fit
     environment:

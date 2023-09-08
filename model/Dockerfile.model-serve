@@ -1,0 +1,6 @@
+FROM tensorflow/serving:2.13.0
+
+ARG MODEL_SRC
+COPY ${MODEL_SRC} /models
+
+ENTRYPOINT [ "/usr/bin/tf_serving_entrypoint.sh", "--model_config_file=/models/models.config"]
