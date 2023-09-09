@@ -20,12 +20,12 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f kubernetes/cryptobot-deployment.yaml \
-          kubernetes/cryptobot-service.yaml \
-          kubernetes/cryptobot-secret.yaml \
-          kubernetes/cryptobot-pvc.yaml \
-          kubernetes/cryptobot-ingress.yaml \
-          kubernetes/cryptobot-cronjob-weeklyTask.yaml \
-          kubernetes/cryptobot-cronjob-minutelyTask.yaml \
-          kubernetes/cryptobot-cronjob-hourlyTask.yaml \
-          kubernetes/cryptobot-cronjob-dailyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-deployment.yaml
+        kubectl apply -f kubernetes/cryptobot-service.yaml
+        kubectl apply -f kubernetes/cryptobot-secret.yaml
+        kubectl apply -f kubernetes/cryptobot-pvc.yaml
+        kubectl apply -f kubernetes/cryptobot-ingress.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-minutelyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-hourlyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-dailyTask.yaml
