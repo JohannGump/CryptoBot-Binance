@@ -19,9 +19,9 @@ jobs:
     - name: Set up Kubernetes CLI
       uses: azure/setup-kubectl@v3
       with:
-        KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
+        KUBECONFIG: ${{ env.KUBE_CONFIG_DATA }}
       env:
-        KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
+        KUBECONFIG: ${{ env.KUBE_CONFIG_DATA }}
     
     - name: Debug KUBECONFIG
       run: |
