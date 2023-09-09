@@ -28,7 +28,7 @@ jobs:
         echo "KUBECONFIG environment variable:"
         echo $KUBECONFIG
         echo "Contents of KUBE_CONFIG_DATA:"
-        echo "${{ secrets.KUBE_CONFIG_DATA }}"
+        echo "${{ env.KUBECONFIG }}"
 
     - name: Deploy to Kubernetes
       run: |
