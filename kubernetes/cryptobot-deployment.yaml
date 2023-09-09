@@ -56,21 +56,14 @@ spec:
         app: c-predict
     spec:
       containers:
-        - image: mlops23cryptobot/model-serve
+        - image: mlops23cryptobot/model-serve:latest
           name: c-predict
           ports:
             - containerPort: 8501
               hostPort: 8501
               protocol: TCP
           resources: {}
-          volumeMounts:
-            - mountPath: /models
-              name: model-fit
       restartPolicy: Always
-      volumes:
-        - name: model-fit
-          persistentVolumeClaim:
-            claimName: model-fit
 status: {}
 ---
 apiVersion: apps/v1
@@ -90,7 +83,7 @@ spec:
       maxSurge: 1
   template:
     metadata:
-      labels:
+      labelslisa: #erreur
         app: db
     spec:
       containers:
