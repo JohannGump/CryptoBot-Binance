@@ -15,7 +15,7 @@ spec:
         app: api-container
     spec:
       containers:
-        - image: johanngump/cryptobot-web-api:test-1
+        - image: mlops23cryptobot/cryptobot-web-api:latest
           name: web-api
           ports:
             - containerPort: 8000

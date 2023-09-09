@@ -18,7 +18,7 @@ spec:
         spec:
           containers:
             - name: hourly-task
-              image: johanngump/requester-app:latest
+              image: mlops23cryptobot/requester-app:latest
               env:
                 - name: TIMESTEP
                   value: hourly
