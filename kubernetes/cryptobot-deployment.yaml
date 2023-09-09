@@ -83,7 +83,7 @@ spec:
       maxSurge: 1
   template:
     metadata:
-      labelslisa: #erreur
+      labels: 
         app: db
     spec:
       containers:
