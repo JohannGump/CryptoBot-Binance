@@ -18,22 +18,14 @@ jobs:
       with:
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
 
-    - name: Deploy to Kubernetes cluster
-      uses: azure/k8s-deploy@v1
-      with: 
-        namespace: default
-        manifest: |
-          kubernetes/cryptobot-deployment.yaml
-          kubernetes/cryptobot-service.yaml
-          kubernetes/cryptobot-secret.yaml
-          kubernetes/cryptobot-pvc.yaml
-          kubernetes/cryptobot-ingress.yaml
-          kubernetes/cryptobot-cronjob-weeklyTask.yaml
-          kubernetes/cryptobot-cronjob-minutelyTask.yaml
-          kubernetes/cryptobot-cronjob-hourlyTask.yaml
-          kubernetes/cryptobot-cronjob-dailyTask.yaml
-        images: |
-          mlops23cryptobot/cryptobot-web-api:latest
-          mlops23cryptobot/model-serve
-          mysql:latest
-          mlops23cryptobot/requester-app:latest
+    - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f kubernetes/cryptobot-deployment.yaml \
+            kubernetes/cryptobot-service.yaml \
+            kubernetes/cryptobot-secret.yaml \
+            kubernetes/cryptobot-pvc.yaml \
+            kubernetes/cryptobot-ingress.yaml \
+            kubernetes/cryptobot-cronjob-weeklyTask.yaml \
+            kubernetes/cryptobot-cronjob-minutelyTask.yaml \
+            kubernetes/cryptobot-cronjob-hourlyTask.yaml \
+            kubernetes/cryptobot-cronjob-dailyTask.yaml
