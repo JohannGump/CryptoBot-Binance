@@ -20,7 +20,6 @@ jobs:
     - name: Test Python Code
       run: | 
         pip3 install -r requirements.txt 
-        cd app/
         pytest
 
     - name: Set up Docker Buildx
@@ -104,6 +103,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -112,7 +112,9 @@ jobs:
           cache-dependency-path: |
             binance_bridge/requirements.txt
             data/requirements.txt
+
       - run: pip install -r binance_bridge/requirements.txt -r data/requirements.txt 
+
       - name: Loads training data
         env:
           KLINESDB_HOST: localhost
@@ -123,6 +125,7 @@ jobs:
         run: |
           cd data
           python build_history.py
+
       - name: Fit models
         run: |
           docker run --rm \
@@ -133,6 +136,7 @@ jobs:
           -e KLINESDB_PASSWORD=password \
           -e KLINESDB_DBNAME=klines_history \
           $DOCKERHUB_ID/model-fit:latest
+          
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
