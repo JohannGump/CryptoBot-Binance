@@ -15,9 +15,9 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-
-    - name: Checkout code
-      uses: actions/checkout@v3
+    
+    - uses: actions/checkout@v3
+    - name: Test Python Code
       run: | 
         pip3 install -r requirements.txt 
         cd app/
