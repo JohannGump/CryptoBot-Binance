@@ -204,7 +204,7 @@ jobs:
       with:
         method: kubeconfig
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
-        context: default
+        context: current-context
 
     # - name: Set up Kubernetes CLI
     #   uses: azure/setup-kubectl@v3
