@@ -1,8 +1,8 @@
-name: Kubernetes Deployment on Branch Push
+name: Deployment CI/CD
 
-env:
-  KUBE_CONFIG_DATA: YXBpVmVyc2lvbjogdjEKY2x1c3RlcnM6Ci0gY2x1c3RlcjoKICAgIGNlcnRpZmljYXRlLWF1dGhvcml0eS1kYXRhOiBMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VKa2VrTkRRVkl5WjBGM1NVSkJaMGxDUVVSQlMwSm5aM0ZvYTJwUFVGRlJSRUZxUVdwTlUwVjNTSGRaUkZaUlVVUkVRbWh5VFROTmRHTXlWbmtLWkcxV2VVeFhUbWhSUkVVeVQxUlJlRTVxV1ROTmFsVjNTR2hqVGsxcVRYZFBWRUUwVFVSck1VMXFRVEZYYUdOT1RYcE5kMDlVUVRGTlJHc3hUV3BCTVFwWGFrRnFUVk5GZDBoM1dVUldVVkZFUkVKb2NrMHpUWFJqTWxaNVpHMVdlVXhYVG1oUlJFVXlUMVJSZUU1cVdUTk5hbFYzVjFSQlZFSm5ZM0ZvYTJwUENsQlJTVUpDWjJkeGFHdHFUMUJSVFVKQ2QwNURRVUZVVmpOWVoxTnZkRUpVWjJwUGRuTnJUelpFVGpsWmRHUnFiVkIxYWxnNFJFdE9kRXByZFdGWlF6SUtNMWgyV1dReWVGVkRha1l4U210R1owWklXblpCVmtkc1l6ZE9Ta2c1Y0dSSFNrMXlSSEp5VVdOTlIzQnZNRWwzVVVSQlQwSm5UbFpJVVRoQ1FXWTRSUXBDUVUxRFFYRlJkMFIzV1VSV1VqQlVRVkZJTDBKQlZYZEJkMFZDTDNwQlpFSm5UbFpJVVRSRlJtZFJWWGRXWWtGdVdGQTFUbFpDUkdwWlJqVlJRWGg2Q2s1MlRIQkNXRmwzUTJkWlNVdHZXa2w2YWpCRlFYZEpSRk5CUVhkU1VVbG5VVVpKVEd0SWFuWnpXVGhLZG1ncmFtSnFabXRIY1ZWT04wTkRPWFpsWTFNS1FYZzNhVkJMTkUxd2FHZERTVkZEV0VGeVFTc3dSRGh1U2toaVpEYzJlSFpMYkN0RVRreHZiazlUTjBGWVlXWXdLekE0UTBkSmRrNU9aejA5Q2kwdExTMHRSVTVFSUVORlVsUkpSa2xEUVZSRkxTMHRMUzBLCiAgICBzZXJ2ZXI6IGh0dHBzOi8vNTEuMTU4LjY3LjE2OjY0NDMKICBuYW1lOiBkZWZhdWx0CmNvbnRleHRzOgotIGNvbnRleHQ6CiAgICBjbHVzdGVyOiBkZWZhdWx0CiAgICB1c2VyOiBkZWZhdWx0CiAgbmFtZTogZGVmYXVsdApjdXJyZW50LWNvbnRleHQ6IGRlZmF1bHQKa2luZDogQ29uZmlnCnByZWZlcmVuY2VzOiB7fQp1c2VyczoKLSBuYW1lOiBkZWZhdWx0CiAgdXNlcjoKICAgIGNsaWVudC1jZXJ0aWZpY2F0ZS1kYXRhOiBMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VKclZFTkRRVlJsWjBGM1NVSkJaMGxKVEd4SWJtNUVVWFZJTkRoM1EyZFpTVXR2V2tsNmFqQkZRWGRKZDBsNlJXaE5RamhIUVRGVlJVRjNkMWtLWVhwT2VreFhUbk5oVjFaMVpFTXhhbGxWUVhoT2Ftc3dUVlJaTWs1NlNURk5RalJZUkZSSmVrMUVhM2RQUkVFMVRsUkpkMDVXYjFoRVZFa3dUVVJyZHdwT2VrRTFUbFJKZDA1V2IzZE5SRVZZVFVKVlIwRXhWVVZEYUUxUFl6TnNlbVJIVm5SUGJURm9Zek5TYkdOdVRYaEdWRUZVUW1kT1ZrSkJUVlJFU0U0MUNtTXpVbXhpVkhCb1drY3hjR0pxUWxwTlFrMUhRbmx4UjFOTk5EbEJaMFZIUTBOeFIxTk5ORGxCZDBWSVFUQkpRVUpCWjNWdFpIZElNVlZ5VlZSbldVc0tRU3M0V0dwbGRtMXVUbGx6VVVsbGVHMVVOek1yYjNNM1QyWlhiRVE1Y1dobFFXdDVZM1ZHYTJoeVMwVTBRbFpVZUVWWWRXOU9TMHRaUjJaSldIRkRZUXBoWnpST1JYQnBhbE5FUWtkTlFUUkhRVEZWWkVSM1JVSXZkMUZGUVhkSlJtOUVRVlJDWjA1V1NGTlZSVVJFUVV0Q1oyZHlRbWRGUmtKUlkwUkJha0ZtQ2tKblRsWklVMDFGUjBSQlYyZENVVFUxYVZCR1p6bHRiREJKYVhGcWNHcG1WV2xqVFhwcFVrRnVla0ZMUW1kbmNXaHJhazlRVVZGRVFXZE9TVUZFUWtZS1FXbENZVmRQVVVJMmVrazFaR2hoY1VzMWNuTjZVbTVXVXpKamRrSktSM2xYUTNsMVRta3ljMVI2ZERoU1owbG9RVXN6UmsxVWVuQlZia05LYlUxaGFRcFNXRlJ4TlRJMllrOTZZMUpzUWtWUVExbFpaMGswTDFRd1p6YzFDaTB0TFMwdFJVNUVJRU5GVWxSSlJrbERRVlJGTFMwdExTMEtMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VKbFJFTkRRVkl5WjBGM1NVSkJaMGxDUVVSQlMwSm5aM0ZvYTJwUFVGRlJSRUZxUVdwTlUwVjNTSGRaUkZaUlVVUkVRbWh5VFROTmRGa3llSEFLV2xjMU1FeFhUbWhSUkVVeVQxUlJlRTVxV1ROTmFsVjNTR2hqVGsxcVRYZFBWRUUwVFVSck1VMXFRVEZYYUdOT1RYcE5kMDlVUVRGTlJHc3hUV3BCTVFwWGFrRnFUVk5GZDBoM1dVUldVVkZFUkVKb2NrMHpUWFJaTW5od1dsYzFNRXhYVG1oUlJFVXlUMVJSZUU1cVdUTk5hbFYzVjFSQlZFSm5ZM0ZvYTJwUENsQlJTVUpDWjJkeGFHdHFUMUJSVFVKQ2QwNURRVUZVVTFCbmNtRnVkemRzZEhsQmRITkVSRXA2WjBKVmVHd3ZTekkzWTAxNUsySlJhRUk1UW5jeFUyRUtUVTl6Y1VsaE1HeEZlak0zTmtKb00zZzVaRGhHVnpBMlRWcE9WR0pUTW1OWWFGUlFjRWRJTUVoMWVFcHZNRWwzVVVSQlQwSm5UbFpJVVRoQ1FXWTRSUXBDUVUxRFFYRlJkMFIzV1VSV1VqQlVRVkZJTDBKQlZYZEJkMFZDTDNwQlpFSm5UbFpJVVRSRlJtZFJWVTlsV1dwNFdWQmFjR1JEU1hGdk5sa3pNVWx1Q2tSTk5HdFJTamgzUTJkWlNVdHZXa2w2YWpCRlFYZEpSRk5SUVhkU1owbG9RVXR2WTNwQ2VHUmxPRGhDT1hvcmJXMW9UVnBvTnpoNFRFRndVR3h2UnpJS1ZtaGlOM1pVY0hOMmFVWjFRV2xGUVhWRVEzbFBkWGN2V0hGb1JuWk5iRXc1TXk5a1RrbFhXWFZDYUUwdkszUkdXVm9yWmxadVZWRkJSMVU5Q2kwdExTMHRSVTVFSUVORlVsUkpSa2xEUVZSRkxTMHRMUzBLCiAgICBjbGllbnQta2V5LWRhdGE6IExTMHRMUzFDUlVkSlRpQkZReUJRVWtsV1FWUkZJRXRGV1MwdExTMHRDazFJWTBOQlVVVkZTVWt4WmxwSVFrOXFiRzAwVEV0Vk1rNXpRWE5sT0daNFZucHJZVVZUVVRnelZWQmpSMGw2UmxacGVsSnZRVzlIUTBOeFIxTk5ORGtLUVhkRlNHOVZVVVJSWjBGRlEwTTJXak5CWmxaVGRGSlBRbWR2UkRkNFpVNDJLMkZqTVdsNFFXZzNSMXBRZG1ZMmFYcHpOVGxoVlZBeWNVWTBRMVJLZVFvMFYxTkhjMjlVWjBaV1VFVlNaVFpuTUc5d1oxbzRhR1Z2U25CeFJHY3dVMjFCUFQwS0xTMHRMUzFGVGtRZ1JVTWdVRkpKVmtGVVJTQkxSVmt0TFMwdExRbz0KICAgIHBhc3N3b3JkOiBoOzkwZ2hBCiAgICB1c2VybmFtZTogY3J5cHRvYm90
-  KUBECONFIG: kubernetes/kubeconfig.yaml
+# env:
+#   KUBE_CONFIG_DATA: YXBpVmVyc2lvbjogdjEKY2x1c3RlcnM6Ci0gY2x1c3RlcjoKICAgIGNlcnRpZmljYXRlLWF1dGhvcml0eS1kYXRhOiBMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VKa2VrTkRRVkl5WjBGM1NVSkJaMGxDUVVSQlMwSm5aM0ZvYTJwUFVGRlJSRUZxUVdwTlUwVjNTSGRaUkZaUlVVUkVRbWh5VFROTmRHTXlWbmtLWkcxV2VVeFhUbWhSUkVVeVQxUlJlRTVxV1ROTmFsVjNTR2hqVGsxcVRYZFBWRUUwVFVSck1VMXFRVEZYYUdOT1RYcE5kMDlVUVRGTlJHc3hUV3BCTVFwWGFrRnFUVk5GZDBoM1dVUldVVkZFUkVKb2NrMHpUWFJqTWxaNVpHMVdlVXhYVG1oUlJFVXlUMVJSZUU1cVdUTk5hbFYzVjFSQlZFSm5ZM0ZvYTJwUENsQlJTVUpDWjJkeGFHdHFUMUJSVFVKQ2QwNURRVUZVVmpOWVoxTnZkRUpVWjJwUGRuTnJUelpFVGpsWmRHUnFiVkIxYWxnNFJFdE9kRXByZFdGWlF6SUtNMWgyV1dReWVGVkRha1l4U210R1owWklXblpCVmtkc1l6ZE9Ta2c1Y0dSSFNrMXlSSEp5VVdOTlIzQnZNRWwzVVVSQlQwSm5UbFpJVVRoQ1FXWTRSUXBDUVUxRFFYRlJkMFIzV1VSV1VqQlVRVkZJTDBKQlZYZEJkMFZDTDNwQlpFSm5UbFpJVVRSRlJtZFJWWGRXWWtGdVdGQTFUbFpDUkdwWlJqVlJRWGg2Q2s1MlRIQkNXRmwzUTJkWlNVdHZXa2w2YWpCRlFYZEpSRk5CUVhkU1VVbG5VVVpKVEd0SWFuWnpXVGhLZG1ncmFtSnFabXRIY1ZWT04wTkRPWFpsWTFNS1FYZzNhVkJMTkUxd2FHZERTVkZEV0VGeVFTc3dSRGh1U2toaVpEYzJlSFpMYkN0RVRreHZiazlUTjBGWVlXWXdLekE0UTBkSmRrNU9aejA5Q2kwdExTMHRSVTVFSUVORlVsUkpSa2xEUVZSRkxTMHRMUzBLCiAgICBzZXJ2ZXI6IGh0dHBzOi8vNTEuMTU4LjY3LjE2OjY0NDMKICBuYW1lOiBkZWZhdWx0CmNvbnRleHRzOgotIGNvbnRleHQ6CiAgICBjbHVzdGVyOiBkZWZhdWx0CiAgICB1c2VyOiBkZWZhdWx0CiAgbmFtZTogZGVmYXVsdApjdXJyZW50LWNvbnRleHQ6IGRlZmF1bHQKa2luZDogQ29uZmlnCnByZWZlcmVuY2VzOiB7fQp1c2VyczoKLSBuYW1lOiBkZWZhdWx0CiAgdXNlcjoKICAgIGNsaWVudC1jZXJ0aWZpY2F0ZS1kYXRhOiBMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VKclZFTkRRVlJsWjBGM1NVSkJaMGxKVEd4SWJtNUVVWFZJTkRoM1EyZFpTVXR2V2tsNmFqQkZRWGRKZDBsNlJXaE5RamhIUVRGVlJVRjNkMWtLWVhwT2VreFhUbk5oVjFaMVpFTXhhbGxWUVhoT2Ftc3dUVlJaTWs1NlNURk5RalJZUkZSSmVrMUVhM2RQUkVFMVRsUkpkMDVXYjFoRVZFa3dUVVJyZHdwT2VrRTFUbFJKZDA1V2IzZE5SRVZZVFVKVlIwRXhWVVZEYUUxUFl6TnNlbVJIVm5SUGJURm9Zek5TYkdOdVRYaEdWRUZVUW1kT1ZrSkJUVlJFU0U0MUNtTXpVbXhpVkhCb1drY3hjR0pxUWxwTlFrMUhRbmx4UjFOTk5EbEJaMFZIUTBOeFIxTk5ORGxCZDBWSVFUQkpRVUpCWjNWdFpIZElNVlZ5VlZSbldVc0tRU3M0V0dwbGRtMXVUbGx6VVVsbGVHMVVOek1yYjNNM1QyWlhiRVE1Y1dobFFXdDVZM1ZHYTJoeVMwVTBRbFpVZUVWWWRXOU9TMHRaUjJaSldIRkRZUXBoWnpST1JYQnBhbE5FUWtkTlFUUkhRVEZWWkVSM1JVSXZkMUZGUVhkSlJtOUVRVlJDWjA1V1NGTlZSVVJFUVV0Q1oyZHlRbWRGUmtKUlkwUkJha0ZtQ2tKblRsWklVMDFGUjBSQlYyZENVVFUxYVZCR1p6bHRiREJKYVhGcWNHcG1WV2xqVFhwcFVrRnVla0ZMUW1kbmNXaHJhazlRVVZGRVFXZE9TVUZFUWtZS1FXbENZVmRQVVVJMmVrazFaR2hoY1VzMWNuTjZVbTVXVXpKamRrSktSM2xYUTNsMVRta3ljMVI2ZERoU1owbG9RVXN6UmsxVWVuQlZia05LYlUxaGFRcFNXRlJ4TlRJMllrOTZZMUpzUWtWUVExbFpaMGswTDFRd1p6YzFDaTB0TFMwdFJVNUVJRU5GVWxSSlJrbERRVlJGTFMwdExTMEtMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VKbFJFTkRRVkl5WjBGM1NVSkJaMGxDUVVSQlMwSm5aM0ZvYTJwUFVGRlJSRUZxUVdwTlUwVjNTSGRaUkZaUlVVUkVRbWh5VFROTmRGa3llSEFLV2xjMU1FeFhUbWhSUkVVeVQxUlJlRTVxV1ROTmFsVjNTR2hqVGsxcVRYZFBWRUUwVFVSck1VMXFRVEZYYUdOT1RYcE5kMDlVUVRGTlJHc3hUV3BCTVFwWGFrRnFUVk5GZDBoM1dVUldVVkZFUkVKb2NrMHpUWFJaTW5od1dsYzFNRXhYVG1oUlJFVXlUMVJSZUU1cVdUTk5hbFYzVjFSQlZFSm5ZM0ZvYTJwUENsQlJTVUpDWjJkeGFHdHFUMUJSVFVKQ2QwNURRVUZVVTFCbmNtRnVkemRzZEhsQmRITkVSRXA2WjBKVmVHd3ZTekkzWTAxNUsySlJhRUk1UW5jeFUyRUtUVTl6Y1VsaE1HeEZlak0zTmtKb00zZzVaRGhHVnpBMlRWcE9WR0pUTW1OWWFGUlFjRWRJTUVoMWVFcHZNRWwzVVVSQlQwSm5UbFpJVVRoQ1FXWTRSUXBDUVUxRFFYRlJkMFIzV1VSV1VqQlVRVkZJTDBKQlZYZEJkMFZDTDNwQlpFSm5UbFpJVVRSRlJtZFJWVTlsV1dwNFdWQmFjR1JEU1hGdk5sa3pNVWx1Q2tSTk5HdFJTamgzUTJkWlNVdHZXa2w2YWpCRlFYZEpSRk5SUVhkU1owbG9RVXR2WTNwQ2VHUmxPRGhDT1hvcmJXMW9UVnBvTnpoNFRFRndVR3h2UnpJS1ZtaGlOM1pVY0hOMmFVWjFRV2xGUVhWRVEzbFBkWGN2V0hGb1JuWk5iRXc1TXk5a1RrbFhXWFZDYUUwdkszUkdXVm9yWmxadVZWRkJSMVU5Q2kwdExTMHRSVTVFSUVORlVsUkpSa2xEUVZSRkxTMHRMUzBLCiAgICBjbGllbnQta2V5LWRhdGE6IExTMHRMUzFDUlVkSlRpQkZReUJRVWtsV1FWUkZJRXRGV1MwdExTMHRDazFJWTBOQlVVVkZTVWt4WmxwSVFrOXFiRzAwVEV0Vk1rNXpRWE5sT0daNFZucHJZVVZUVVRnelZWQmpSMGw2UmxacGVsSnZRVzlIUTBOeFIxTk5ORGtLUVhkRlNHOVZVVVJSWjBGRlEwTTJXak5CWmxaVGRGSlBRbWR2UkRkNFpVNDJLMkZqTVdsNFFXZzNSMXBRZG1ZMmFYcHpOVGxoVlZBeWNVWTBRMVJLZVFvMFYxTkhjMjlVWjBaV1VFVlNaVFpuTUc5d1oxbzRhR1Z2U25CeFJHY3dVMjFCUFQwS0xTMHRMUzFGVGtRZ1JVTWdVRkpKVmtGVVJTQkxSVmt0TFMwdExRbz0KICAgIHBhc3N3b3JkOiBoOzkwZ2hBCiAgICB1c2VybmFtZTogY3J5cHRvYm90
+#   KUBECONFIG: kubernetes/kubeconfig.yaml
 
 on:
   push:
@@ -10,24 +10,193 @@ on:
       - kub  
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
     steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      run: | 
+        pip3 install -r requirements.txt 
+        cd app/
+        pytest
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # tests unitaires sur requester
+    - name: Test Docker image
+      run: |
+        # Execute unitary tests
+        cd requester
+        pip install -r requirements.txt
+        pytest main_test.py
+      continue-on-error: true  
+
+  build-and-push:
+    name: Build and push images
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build & push model-fit image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: model/Dockerfile.model-fit
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/model-fit:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
+          cache-to: type=inline
+
+      - name: Build & push requester-app image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./requester
+          file: requester/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/requester-app:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
+          cache-to: type=inline
+
+      - name: Build & push cryptobot-web-api image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./web_api
+          file: web_api/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:latest
+          cache-to: type=inline
+
+  train-model:
+    name: Train models
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    services:
+      database:
+        # MySQL server (to be replaced with an external one)
+        image: mysql:8.1.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: klines_history
+          MYSQL_ROOT_PASSWORD: password
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: |
+            binance_bridge/requirements.txt
+            data/requirements.txt
+      - run: pip install -r binance_bridge/requirements.txt -r data/requirements.txt 
+      - name: Loads training data
+        env:
+          KLINESDB_HOST: localhost
+          KLINESDB_USER: root
+          KLINESDB_PASSWORD: password
+          KLINESDB_DBNAME: klines_history
+          KLINES_MAX_RECORDS_PER_SYTS: 5000
+        run: |
+          cd data
+          python build_history.py
+      - name: Fit models
+        run: |
+          docker run --rm \
+          --network ${{ job.container.network }} \
+          -v /model_fit:/src/model_fit \
+          -e KLINESDB_HOST=database \
+          -e KLINESDB_USER=root \
+          -e KLINESDB_PASSWORD=password \
+          -e KLINESDB_DBNAME=klines_history \
+          $DOCKERHUB_ID/model-fit:latest
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: models.${{ github.sha }}
+          path: /model_fit
+
+  package-model:
+    name: TFS embedding
+    needs: train-model
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: models.${{ github.sha }}
+          path: models
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build & push model-serve
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: model/Dockerfile.model-serve
+          build-args: |
+            MODEL_SRC=models
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/model-serve:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
+          cache-to: type=inline
+
+  deploy-kubernetes:
+    name: Kubernetes deployment
+    needs: [build-and-push, package-model]
+    runs-on: ubuntu-latest
+    steps:
+
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Kubernetes CLI
       uses: azure/setup-kubectl@v3
       with:
-        kubeconfig: ${{ env.KUBE_CONFIG_DATA }}
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
     
     - name: Debug KUBECONFIG
       run: |
         echo "KUBECONFIG environment variable:"
-        echo "${{ env.KUBECONFIG }}"
+        echo "${{ secrets.KUBECONFIG }}"
         echo "Contents of KUBE_CONFIG_DATA:"
-        echo "${{ env.KUBE_CONFIG_DATA }}"
+        echo "${{ secrets.KUBE_CONFIG_DATA }}"
 
     - name: Deploy to Kubernetes
       run: |
