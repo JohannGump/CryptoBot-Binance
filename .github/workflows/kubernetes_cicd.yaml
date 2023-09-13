@@ -123,7 +123,6 @@ jobs:
           KLINESDB_DBNAME: klines_history
           KLINES_MAX_RECORDS_PER_SYTS: 5000
         run: |
-          cd .
           python data/build_history.py
 
       - name: Fit models
@@ -135,7 +134,7 @@ jobs:
           -e KLINESDB_USER=root \
           -e KLINESDB_PASSWORD=password \
           -e KLINESDB_DBNAME=klines_history \
-          $DOCKERHUB_ID/model-fit:latest
+          ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
