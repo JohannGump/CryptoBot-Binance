@@ -190,10 +190,26 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Set up Kubectl
-      uses: azure/k8s-set-context@v1
+    # - name: Set kubeconfig
+    #   run: |
+    #     echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode
+    #     kubectl config view
+    #     echo "KUBECONFIG environment variable:"
+    #     echo "${{ env.KUBECONFIG }}"
+    #     echo "Contents of KUBE_CONFIG_DATA:"
+    #     echo "${{ secrets.KUBE_CONFIG_DATA }}"
+
+    - name: Set Kubeconfig
+      uses: azure/k8s-set-context@v3
       with:
+        method: kubeconfig
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
+        context: default
+
+    # - name: Set up Kubernetes CLI
+    #   uses: azure/setup-kubectl@v3
+    #   with:
+    #     kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
     
     - name: Debug KUBECONFIG
       run: |
