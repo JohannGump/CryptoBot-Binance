@@ -28,10 +28,15 @@ spec:
           volumeMounts:
             - mountPath: /log
               name: log-data
+            - mountPath: /app/data
+              name: preprocessing-data
       volumes:
         - name: log-data
           persistentVolumeClaim:
-            claimName: log-data        
+            claimName: log-data 
+        - name: preprocessing-data
+          persistentVolumeClaim:
+            claimName: preprocessing-data      
       restartPolicy: Always
 status: {}
 ---
