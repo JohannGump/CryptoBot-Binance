@@ -198,9 +198,10 @@ jobs:
     - name: Configure kubectl
       run: |
         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
+        export KUBECONFIG=kubeconfig.yaml
         kubectl config view
-      env:
-        KUBECONFIG: kubeconfig.yaml
+      #env:
+      #  KUBECONFIG: kubeconfig.yaml
 
     # - name: Set kubeconfig
     #   run: |
