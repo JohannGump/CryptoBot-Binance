@@ -190,60 +190,16 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up kubectl
-      uses: azure/setup-kubectl@v1
+      uses: azure/setup-kubectl@v3
       with:
         version: 'latest'
         install-missing-components: true
 
-    - name: Configure kubectl
+    - name: Configure kubectl and deploy
       run: |
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
         kubectl config view
-        kubectl apply -f kubernetes/cryptobot-deployment.yaml
-        kubectl apply -f kubernetes/cryptobot-service.yaml
-        kubectl apply -f kubernetes/cryptobot-secret.yaml
-        kubectl apply -f kubernetes/cryptobot-pvc.yaml
-        kubectl apply -f kubernetes/cryptobot-ingress.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-minutelyTask.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-hourlyTask.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-dailyTask.yaml
-      #env:
-      #  KUBECONFIG: kubeconfig.yaml
-
-    # - name: Set kubeconfig
-    #   run: |
-    #     echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode
-    #     kubectl config view
-    #     echo "KUBECONFIG environment variable:"
-    #     echo "${{ env.KUBECONFIG }}"
-    #     echo "Contents of KUBE_CONFIG_DATA:"
-    #     echo "${{ secrets.KUBE_CONFIG_DATA }}"
-
-    # - name: Set Kubeconfig
-    #   uses: azure/k8s-set-context@v3
-    #   with:
-    #     method: kubeconfig
-    #     kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
-    #     context: default
-
-    # - name: Set up Kubernetes CLI
-    #   uses: azure/setup-kubectl@v3
-    #   with:
-    #     kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
-
-    - name: Debug KUBECONFIG
-      run: |
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode
-        kubectl config view
-        echo "KUBECONFIG environment variable:"
-        echo "${{ env.KUBECONFIG }}"
-        echo "Contents of KUBE_CONFIG_DATA:"
-        echo "${{ secrets.KUBE_CONFIG_DATA }}"
-
-    - name: Deploy to Kubernetes
-      run: |
         kubectl apply -f kubernetes/cryptobot-deployment.yaml
         kubectl apply -f kubernetes/cryptobot-service.yaml
         kubectl apply -f kubernetes/cryptobot-secret.yaml
