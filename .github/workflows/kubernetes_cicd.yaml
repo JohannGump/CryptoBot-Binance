@@ -197,7 +197,7 @@ jobs:
 
     - name: Configure kubectl and deploy
       run: |
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" > kubeconfig.yaml
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
         kubectl config view
         kubectl apply -f kubernetes/cryptobot-deployment.yaml
