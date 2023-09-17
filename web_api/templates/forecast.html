@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<ul class="flex">
+    {% for s in Symbol %}
+    <li class="mr-2 px-2 {{ s.name == symbol and 'color-black border-b-2 bg-slate-300 text-slate-500' }}">
+        <a href="/forecast/{{ symbol_label(s.name) }}/{{ timestep }}">{{ s.value }}</a>
+    </li>
+    {% endfor %}
+</ul>
+<div class="grid grid-cols-3 gap-4 mt-7">
+    <h1 class="row-start-1 col-start-1 text-slate-500 text-sm">Prédictions {{ symbol_name(symbol) }} à +4 {{ unit_word }}s</h1>
+    <div class="row-start-1 col-start-2 justify-self-end">
+        <a class="{{ unit == 'J' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_label(symbol) }}/daily">J</a>
+        <a class="{{ unit == 'H' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_label(symbol) }}/hourly">H</a>
+        <a class="{{ unit == 'M' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_label(symbol) }}/minutely">M</a>
+        <a class="{{ unit == 'S' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_label(symbol) }}/weekly">S</a>
+    </div>
+    <div class="row-start-2 col-span-2">{{ graph_html | safe }}</div>
+    <div class="row-start-2 pl-6">
+        <div class="flex text-xs mb-2">
+            <span class="inline-block w-11"></span>
+            <span class="inline-block w-20">&nbsp;&nbsp;Variation</span>
+            <span>Prix</span>
+        </div>
+        {% for x in predictions %}
+        <div class="flex mb-2">
+            <span class="inline-block w-11">{{ unit }}<small>+{{ loop.index }}</small></span>
+            <span class="inline-block w-20">{{ pct_change_trend(x.PctChange) }}</span>
+            <span>${{ "%.2f"|format(x.ClosePrice) }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

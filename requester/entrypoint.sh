@@ -1,4 +1,2 @@
 #!/bin/bash
-echo $TIMESTEP
-
-./create-klines.sh
+./etl-and-predict.sh

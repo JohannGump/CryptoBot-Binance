@@ -1,10 +1,47 @@
-.green-arrow::before {
-    content: "↑ ";
-    color: green;
+html {
+    font: 18px Verdana;
+    /* color: #b7b6b6; */
+    /* background: #222; */
+    /* color: #565151; */
+    --u-color: rgb(22, 185, 22);
+    --d-color: red
 }
 
-.red-arrow::before {
-    content: "↓ ";
-    color: red;
+.symbol {
+    display: flex;
+    align-items: center;
 }
+.symbol::before {
+    content: "";
+    display: inline-block;
+    margin-right: 10px;
+    width: 34px;
+    height: 34px;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+.symbol.ADAUSDT::before { background-image: url(crypto-icons/ADAUSDT.svg); }
+.symbol.BTCUSDT::before { background-image: url(crypto-icons/BTCUSDT.svg); }
+.symbol.BNBUSDT::before { background-image: url(crypto-icons/BNBUSDT.svg); }
+.symbol.ETHUSDT::before { background-image: url(crypto-icons/ETHUSDT.svg); }
+.symbol.XRPUSDT::before { background-image: url(crypto-icons/XRPUSDT.svg); }
 
+.pct-change-u {
+    color: var(--u-color);
+}
+.pct-change-d {
+    color: var(--d-color);
+}
+.pct-change-u::before, .pct-change-d::before {
+    font-weight: bold;
+    font-size: .8rem;
+    margin-right: 4px;
+}
+.pct-change-u::before {
+    content: "↗";
+    color: var(-u-color);
+}
+.pct-change-d::before {
+    content: "↘";
+    color: var(--d-color);
+}
