@@ -1,6 +1,2 @@
-pandas==2.0.3
-python-dotenv
-sqlalchemy==2.0.19
 mysql-connector-python==8.1.0
-pytest
 requests==2.31.0

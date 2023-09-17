@@ -4,30 +4,25 @@ FROM python:slim
 ENV TZ=Europe/Paris
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Copy in the container
-COPY schemas.py /app/
-COPY main.py /app/
-COPY preprocessing.py /app/
-COPY entrypoint.sh /app/
-COPY create-klines.sh /app/
-COPY predict.py /app/
-COPY requirements.txt /app/
-
-# Define working folder
-WORKDIR /app
+RUN apt-get update && apt-get install -y tzdata
 
 # Install the required Python modules using pip mysql-connector-python
-RUN pip3 install datetime -r requirements.txt 
+COPY requester/requirements.txt /app/
+RUN pip install -r /app/requirements.txt 
 
-# Install cron
-RUN apt-get update && apt-get install -y tzdata nano python3-pip
+# Copy in the container
+COPY binance_bridge/schemas.py /binance_bridge/schemas.py
+COPY requester/update_klines.py /app/
+COPY requester/predict.py /app/
+COPY requester/entrypoint.sh /app/
+COPY requester/etl-and-predict.sh /app/
 
 # Donner les permissions d'exécution au script shell et cmd python
 RUN chmod +x /app/entrypoint.sh
-RUN chmod +x /app/create-klines.sh
-RUN chmod +x /app/main.py
-RUN chmod +x /app/preprocessing.py
-RUN chmod +x /app/predict.py
+RUN chmod +x /app/etl-and-predict.sh
+
+# Define working folder
+WORKDIR /app
 
 # Execute python script
 ENTRYPOINT ["/app/entrypoint.sh"]
