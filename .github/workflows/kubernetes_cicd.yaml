@@ -3,7 +3,8 @@ name: Deployment CI/CD
 on:
   push:
     branches:
-      - kub  
+      - kub 
+      - dev
 
 jobs:
 
