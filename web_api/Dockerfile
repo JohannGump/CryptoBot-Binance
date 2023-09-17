@@ -5,13 +5,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y tzdata
 
-COPY requirements.txt /app/
-COPY main.py /app/
-COPY templates /app/templates
-COPY static /app/static
+COPY web_api/requirements.txt /app/
+RUN pip install -r /app/requirements.txt
+
+COPY web_api/main.py /app/
+COPY web_api/templates /app/templates
+COPY web_api/static /app/static
 
 WORKDIR /app
-RUN pip install -r requirements.txt
 
 EXPOSE 8000
 
