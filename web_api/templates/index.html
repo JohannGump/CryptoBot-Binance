@@ -23,7 +23,7 @@
                 <td>${{ row.NowClosePrice }}</td>
                 <td>{{ pct_change_trend(row.PctChange) }}</td>
                 <td>${{ "%.4f" % row.ClosePrice }}</td>
-                <td><a href="/forecast/{{ symbol_label(row.Symbol) }}/daily" class="underline">
+                <td><a href="/forecast/{{ symbol_slug(row.Symbol) }}/daily" class="underline">
                     <small>détails ></small>
                 </a></td>
             </tr>

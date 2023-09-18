@@ -1,5 +1,8 @@
+{% macro symbol_slug(key) -%}
+    {{ SymbolSlug[key].value }}
+{%- endmacro %}
 {% macro symbol_label(key) -%}
-    {{ Symbol[key].value }}
+    {{ Symbol[key].name|trim('USDT') }}
 {%- endmacro %}
 {% macro symbol_name(key) -%}
     {{ SymbolName[key].value }}

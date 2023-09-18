@@ -8,6 +8,13 @@ class Symbol(str, Enum):
     ETHUSDT = "ETHUSDT"
     XRPUSDT = "XRPUSDT"
 
+# Crypto currencies base/name pairs
+class SymbolName(str, Enum):
+    ADAUSDT = "Cardano"
+    BTCUSDT = "Bitcoin"
+    BNBUSDT = "BNB"
+    ETHUSDT = "Ethereum"
+    XRPUSDT = "Ripple"
 
 # Kline Binance data <> Dataframe mapping
 # ! Mapped in raw data order: need python >= 3.6

@@ -1,4 +1,8 @@
 import os
+import sys
+sys.path.insert(0, os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath("../binance_bridge"))
+from binance_bridge.schemas import Symbol, TimeStep, SymbolName
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -11,31 +15,19 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, Any
 
-class Symbol(str, Enum):
-    ADAUSDT = "ADA"
-    BTCUSDT = "BTC"
-    BNBUSDT = "BNB"
-    ETHUSDT = "ETH"
-    XRPUSDT = "XRP"
-
-class SymbolName(str, Enum):
-    ADAUSDT = "Cardano"
-    BTCUSDT = "Bitcoin"
-    BNBUSDT = "BNB"
-    ETHUSDT = "Ethereum"
-    XRPUSDT = "Ripple"
-
-class Frequency(str, Enum):
-    MINUTELY = "minutely"
-    HOURLY = "hourly"
-    DAILY = "daily"
-    WEEKLY = "weekly"
+SymbolSlug = Enum('SymbolSlug', {s.name:s.name.lower() for s in Symbol})
+TimeStepSlug = Enum('TimeStepSlug', {s.name:s.name.lower() for s in TimeStep})
 
 app = FastAPI() 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def template_share_vars(request: Request) -> Dict[str, Any]:
-    return {'Symbol': Symbol, 'SymbolName': SymbolName, 'time': datetime.now() }
+    return {
+        'Symbol': Symbol,
+        'SymbolName': SymbolName,
+        'SymbolSlug': SymbolSlug,
+        'time': datetime.now()
+    }
 
 templates = Jinja2Templates(directory="templates", context_processors=[template_share_vars])
 TemplateResponse = templates.TemplateResponse
@@ -88,12 +80,12 @@ def index(context = TemplateVars) -> HTMLResponse:
     return TemplateResponse('index.html', tmpl_vars)
 
 @app.get('/forecast/{symbol}/{timestep}')
-def forecast(symbol: Symbol, timestep: Frequency, context = TemplateVars) -> HTMLResponse:
+def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars) -> HTMLResponse:
     dbconn = connect()
     cursor = dbconn.cursor(dictionary=True)
 
     # Select most recent klines
-    unit = dict(zip(Frequency, ['MINUTE', 'HOUR', 'DAY', 'WEEK']))[timestep]
+    unit = dict(zip(TimeStepSlug, ['MINUTE', 'HOUR', 'DAY', 'WEEK']))[timestep]
     query = f"""
     SELECT * FROM klines
      WHERE Symbol = %s AND TimeStep = %s
@@ -144,8 +136,8 @@ def forecast(symbol: Symbol, timestep: Frequency, context = TemplateVars) -> HTM
 
     tmpl_vars = context(
         now=datetime.now(),
-        unit=dict(zip(Frequency, ['M', 'H', 'J', 'S']))[timestep],
-        unit_word=dict(zip(Frequency, ['Minute', 'Heure', 'Jour', 'Semaine']))[timestep],
+        unit=dict(zip(TimeStepSlug, ['M', 'H', 'J', 'S']))[timestep],
+        unit_word=dict(zip(TimeStepSlug, ['Minute', 'Heure', 'Jour', 'Semaine']))[timestep],
         timestep=timestep.value,
         klines=klines,
         predictions=predictions,
