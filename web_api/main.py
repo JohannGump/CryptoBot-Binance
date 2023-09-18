@@ -116,6 +116,9 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     rdata = [None]*(len(klines) - 1) + [klines[-1]['ClosePrice']]
     rdata = rdata + [x['ClosePrice'] for x in predictions]
 
+    #
+    unit = dict(zip(TimeStepSlug, ['M', 'H', 'J', 'S']))[timestep]
+
 	# Compute close price variations
     variations = []
     prices = [ldata[-1]] + [x['ClosePrice'] for x in predictions]
@@ -124,10 +127,11 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
         v = (p - prices[i]) / p
         variations.append(dict(PctChange=v, ClosePrice=p))
 
+    txts = [None]*(len(klines)) + [unit + str(i) for i in range(1, 5)]
     fig = go.Figure(
         data = [
-            go.Line(x=dates, y=ldata, line_color='orange', mode='lines+markers', name=''),
-            go.Line(x=dates, y=rdata, line_dash="dot", line_color='orange', mode='lines+markers', name=''),
+            go.Line(x=dates, y=ldata, line_color='orange', mode='lines+markers+text', name=''),
+            go.Line(x=dates, y=rdata, text=txts, line_dash="dot", line_color='orange', mode='lines+markers+text', textposition='top right', name=''),
         ],
         layout = go.Layout(
             paper_bgcolor='rgba(0,0,0,0)',
@@ -145,7 +149,7 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
 
     tmpl_vars = context(
         now=datetime.now(),
-        unit=dict(zip(TimeStepSlug, ['M', 'H', 'J', 'S']))[timestep],
+        unit=unit,
         unit_word=dict(zip(TimeStepSlug, ['Minute', 'Heure', 'Jour', 'Semaine']))[timestep],
 		variations=variations,
         timestep=timestep.value,
