@@ -103,6 +103,7 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     SELECT * FROM predictions
      WHERE Symbol = %s AND TimeStep = %s
        AND OpenTime > %s
+     ORDER BY OpenTime
     """
     cursor.execute(query, [symbol.name, timestep.name, last_k])
     predictions = cursor.fetchall()
@@ -114,6 +115,14 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     ldata = [x['ClosePrice'] for x in klines]
     rdata = [None]*(len(klines) - 1) + [klines[-1]['ClosePrice']]
     rdata = rdata + [x['ClosePrice'] for x in predictions]
+
+	# Compute close price variations
+    variations = []
+    prices = [ldata[-1]] + [x['ClosePrice'] for x in predictions]
+    for i in range(len(prices) - 1):
+        p = prices[i + 1]
+        v = (p - prices[i]) / p
+        variations.append(dict(PctChange=v, ClosePrice=p))
 
     fig = go.Figure(
         data = [
@@ -138,6 +147,7 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
         now=datetime.now(),
         unit=dict(zip(TimeStepSlug, ['M', 'H', 'J', 'S']))[timestep],
         unit_word=dict(zip(TimeStepSlug, ['Minute', 'Heure', 'Jour', 'Semaine']))[timestep],
+		variations=variations,
         timestep=timestep.value,
         klines=klines,
         predictions=predictions,

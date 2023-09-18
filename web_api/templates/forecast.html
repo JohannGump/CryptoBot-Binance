@@ -24,14 +24,18 @@
     <div class="row-start-2 pl-6">
         <div class="flex text-xs mb-2">
             <span class="inline-block w-11"></span>
-            <span class="inline-block w-20">&nbsp;&nbsp;Variation</span>
+            <span class="inline-block w-20">Variation</span>
             <span>Prix</span>
         </div>
-        {% for x in predictions %}
+        {% for x in variations %}
         <div class="flex mb-2">
             <span class="inline-block w-11">{{ unit }}<small>+{{ loop.index }}</small></span>
-            <span class="inline-block w-20">{{ pct_change_trend(x.PctChange) }}</span>
+            <span class="inline-block w-20">{{ pct_change_vary(x.PctChange) }}</span>
+            {% if x.ClosePrice < 1 %}
+            <span>${{ "%.4f"|format(x.ClosePrice) }}</span>
+            {% else %}
             <span>${{ "%.2f"|format(x.ClosePrice) }}</span>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

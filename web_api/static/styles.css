@@ -26,22 +26,18 @@ html {
 .symbol.ETHUSDT::before { background-image: url(crypto-icons/ETHUSDT.svg); }
 .symbol.XRPUSDT::before { background-image: url(crypto-icons/XRPUSDT.svg); }
 
-.pct-change-u {
-    color: var(--u-color);
+[class*="pct-change"] {
+    display: flex;
+    align-items: center;
 }
-.pct-change-d {
-    color: var(--d-color);
-}
-.pct-change-u::before, .pct-change-d::before {
+[class*="pct-change"]::before {
     font-weight: bold;
     font-size: .8rem;
     margin-right: 4px;
 }
-.pct-change-u::before {
-    content: "↗";
-    color: var(-u-color);
-}
-.pct-change-d::before {
-    content: "↘";
-    color: var(--d-color);
-}
+.pct-change-u { color: var(--u-color); }
+.pct-change-d { color: var(--d-color); }
+.pct-change-u::before { content: "↗"; }
+.pct-change-d::before { content: "↘"; }
+.pct-change-u.trend-vary::before { content: "+"; margin-right: 2px; }
+.pct-change-d.trend-vary::before { content: "-"; margin-right: 2px; }

@@ -9,9 +9,16 @@
 {%- endmacro %}
 {% macro pct_change_trend(pct_value) -%}
     {% if pct_value > 0 %}
-    <span class="pct-change-u">{{ "%.1f" % (pct_value * 100)|abs }} %</span>
+    <span class="pct-change-u">{{ "%.1f" % (pct_value * 100)|abs }}<small>%</small></span>
     {% else %}
-    <span class="pct-change-d">{{ "%.1f" % (pct_value * 100)|abs }} %</span>
+    <span class="pct-change-d">{{ "%.1f" % (pct_value * 100)|abs }}<small>%</small></span>
+    {% endif %}
+{%- endmacro %}
+{% macro pct_change_vary(pct_value) -%}
+    {% if pct_value > 0 %}
+    <span class="pct-change-u trend-vary">{{ "%.1f" % (pct_value * 100)|abs }}<small>%</small></span>
+    {% else %}
+    <span class="pct-change-d trend-vary">{{ "%.1f" % (pct_value * 100)|abs }}<small>%</small></span>
     {% endif %}
 {%- endmacro %}
 
