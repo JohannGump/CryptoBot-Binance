@@ -186,12 +186,12 @@ jobs:
     - name: Configure kubectl and deploy
       run: |
         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
-        echo "${{ secrets.CRYPTOBOT_SECRET }}" | base64 --decode > kubernetes/cryptobot-secret.yaml
+        echo "${{ secrets.CRYPTOBOT_SECRET }}" | base64 --decode > cryptobot-secret.yaml
         export KUBECONFIG=kubeconfig.yaml
         kubectl config view
         kubectl apply -f kubernetes/cryptobot-deployment.yaml
         kubectl apply -f kubernetes/cryptobot-service.yaml
-        kubectl apply -f kubernetes/cryptobot-secret.yaml
+        kubectl apply -f cryptobot-secret.yaml
         kubectl apply -f kubernetes/cryptobot-pvc.yaml
         kubectl apply -f kubernetes/cryptobot-ingress.yaml
         kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
