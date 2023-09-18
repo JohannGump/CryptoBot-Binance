@@ -24,6 +24,7 @@ spec:
       targetPort: 8501
   selector:
     app: c-predict
+  type: LoadBalancer
 ---
 apiVersion: v1
 kind: Service
@@ -37,6 +38,7 @@ spec:
       targetPort: 3306
   selector:
     app: db
+  type: LoadBalancer
 ---
 apiVersion: v1
 kind: Service
@@ -49,3 +51,4 @@ spec:
     - protocol: TCP
       port: 80  
       targetPort: 80
+  type: LoadBalancer
