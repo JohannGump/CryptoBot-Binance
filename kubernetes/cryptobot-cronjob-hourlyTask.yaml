@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: cronjob-hourly
 spec:
-  schedule: "0 * * * *"  # Exécution toutes les heures
+  schedule: "*/1 * * * *"  # Exécution toutes les heures
   startingDeadlineSeconds: 1 # Démarrage immédiat
   jobTemplate:
     metadata:
