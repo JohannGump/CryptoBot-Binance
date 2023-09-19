@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block head %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script id="plotly-lib" src="https://cdn.plot.ly/plotly-latest.min.js" async></script>
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
     </li>
     {% endfor %}
 </ul>
-<div class="grid grid-cols-3 gap-4 mt-7">
+<div id="forecast-chart-ctn" class="grid grid-cols-3 gap-4 mt-14">
     <h1 class="row-start-1 col-start-1 text-slate-500 text-sm">Prédictions {{ symbol_name(symbol) }} à +4 {{ unit_word }}s</h1>
     <div class="row-start-1 col-start-2 justify-self-end">
         <a class="{{ unit == 'J' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_slug(symbol) }}/daily">J</a>
@@ -20,8 +20,10 @@
         <a class="{{ unit == 'M' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_slug(symbol) }}/minutely">M</a>
         <a class="{{ unit == 'S' and 'border-b-2 text-amber-500' }} w-5 inline-block text-center" href="/forecast/{{ symbol_slug(symbol) }}/weekly">S</a>
     </div>
-    <div class="row-start-2 col-span-2">{{ graph_html | safe }}</div>
-    <div class="row-start-2 pl-6">
+    <div id="forecast-chart" class="h-72 row-start-2 col-span-2 flex justify-center items-center transition-opacity duration-1000 opacity-20">
+        <div id="spinner" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div>
+    <div id="forecast-legend" class="row-start-2 pl-6 transition-opacity duration-1000 opacity-0">
         <div class="flex text-xs mb-2">
             <span class="inline-block w-7"></span>
             <span class="inline-block w-20">Variation</span>
@@ -40,4 +42,18 @@
         {% endfor %}
     </div>
 </div>
+<script>
+document.querySelector("#plotly-lib").onload = () => {
+    setTimeout(() => {
+        document.querySelector("#spinner").remove()
+        var graph = {{ plot_json | safe }};
+        Plotly.plot('forecast-chart', graph, {});
+        requestAnimationFrame(() => {
+            document.querySelector(".modebar-container").remove()
+            document.querySelector("#forecast-chart").classList.add('opacity-100')
+            document.querySelector("#forecast-legend").classList.add('opacity-100')
+        })
+    }, 800)
+}
+</script>
 {% endblock %}

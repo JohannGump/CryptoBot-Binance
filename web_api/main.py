@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 import mysql.connector
 import uvicorn
 import plotly.graph_objs as go
+import plotly.io.json as pjson
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timedelta
@@ -145,7 +146,7 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     fig.update_yaxes(gridcolor='rgba(0,0,0,.1)')
     fig.update_xaxes(showgrid=False)
 
-    graph_html = fig.to_html(full_html=True, config = {'displayModeBar': False})
+    plot_json = pjson.to_json_plotly(fig)
 
     tmpl_vars = context(
         now=datetime.now(),
@@ -156,7 +157,7 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
         klines=klines,
         predictions=predictions,
         symbol=symbol.name,
-        graph_html=graph_html
+        plot_json=plot_json
     )
     return templates.TemplateResponse("forecast.html", tmpl_vars)
 
