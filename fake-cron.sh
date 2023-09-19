@@ -8,5 +8,5 @@ do
         export TIMESTEP=$TIMESTEP
         ./entrypoint.sh
     done
-    sleep 55
+    sleep 60
 done
