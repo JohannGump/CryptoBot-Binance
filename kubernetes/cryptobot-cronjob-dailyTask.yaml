@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: cronjob-daily
 spec:
-  schedule: "0 0 * * *"  # à minuit chaque jour
+  schedule: "*/1 * * * *"  # à minuit chaque jour
   startingDeadlineSeconds: 1 # Démarrage immédiat
   jobTemplate:
     metadata:
