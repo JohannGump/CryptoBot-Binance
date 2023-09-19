@@ -97,7 +97,20 @@ services:
       MYSQL_DATABASE_PREDICTIONS: klines_history
       MYSQL_PASSWORD_PREDICTIONS: password
       PREDICT_SERVER_HOST: model-serve:8501
-    entrypoint: "/fake-cron.sh"
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        cd /app
+        while true
+        do
+            timeteps=('minutely' 'hourly' 'daily' 'weekly')
+            for TIMESTEP in $${timeteps[*]}
+            do
+                TIMESTEP=$$TIMESTEP ./entrypoint.sh
+            done
+            sleep 60
+        done
     depends_on:
       db:
         condition: service_healthy
