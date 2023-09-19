@@ -6,7 +6,7 @@ RUN pip install -r requirements.txt \
  && pip install -r requirements_bb.txt
 
 COPY data/build_history.py src/data/
-COPY binance_bridge/*.py src/binance_bridge/
+COPY binance_bridge/*.py src/data/binance_bridge/
 
 WORKDIR /src/data
 

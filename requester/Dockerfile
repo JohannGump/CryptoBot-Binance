@@ -16,10 +16,12 @@ COPY requester/update_klines.py /app/
 COPY requester/predict.py /app/
 COPY requester/entrypoint.sh /app/
 COPY requester/etl-and-predict.sh /app/
+COPY fake-cron.sh /fake-cron.sh
 
 # Donner les permissions d'exécution au script shell et cmd python
 RUN chmod +x /app/entrypoint.sh
 RUN chmod +x /app/etl-and-predict.sh
+RUN chmod +x /fake-cron.sh
 
 # Define working folder
 WORKDIR /app

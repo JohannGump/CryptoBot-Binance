@@ -2,52 +2,9 @@ version: '3.8'
 
 services:
 
-  data:
-    image: cryptobot/data:latest
-    container_name: historical-data
-    build:
-      context: ${PWD}
-      dockerfile: ./data/Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      KLINESDB_HOST: db
-      KLINESDB_USER: root
-      KLINESDB_PASSWORD: password
-      KLINESDB_DBNAME: klines_history
-      KLINES_MAX_RECORDS_PER_SYTS: 5000
-    networks:
-      - requester_network
-
-  app:
-    image: requester/app:latest
-    build:
-      context: ${PWD}/requester
-    container_name: c-script
-    environment:
-      MYSQL_HOST_KLINES: db
-      MYSQL_USER_KLINES: root
-      MYSQL_DATABASE_KLINES: klines_history
-      MYSQL_PASSWORD_KLINES: password
-      MYSQL_HOST_PREDICTIONS: db
-      MYSQL_USER_PREDICTIONS: root
-      MYSQL_DATABASE_PREDICTIONS: klines_history
-      MYSQL_PASSWORD_PREDICTIONS: password
-      PREDICT_SERVER_HOST: c-predict:8501
-    depends_on:
-      db:
-        condition: service_healthy
-      model-fit:
-        condition: service_completed_successfully
-    volumes:
-      - preprocessing_data:/app/data
-    networks:
-      - requester_network
-
   db:
-    image: mysql:latest
-    container_name: db
+    image: mysql:8.1.0
+    container_name: c-db
     cap_add:
       - SYS_NICE
     restart: always
@@ -62,32 +19,34 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - klines_data:/var/lib/mysql
+      - klines-data:/var/lib/mysql
     networks:
-      - requester_network
+      - cryptobot-network
 
-  c-predict:
-    container_name: c-predict
-    image: tensorflow/serving:2.13.0
-    depends_on:
-      model-fit:
-        condition: service_completed_successfully
-    command:
-      - --model_config_file=/models/models.config
-      - --model_config_file_poll_wait_seconds=60
-    ports:
-      - 8501:8501
-    volumes:
-      - model_fit:/models/
-    networks:
-      - requester_network
-
-  model-fit:
-    container_name: model-fit
-    image: cryptobot/model:latest
+  data:
+    image: cryptobot/training-data:dev
+    container_name: c-training-data
     build:
       context: ${PWD}
-      dockerfile: ./model/Dockerfile
+      dockerfile: ./data/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KLINESDB_HOST: db
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: password
+      KLINESDB_DBNAME: klines_history
+      KLINES_MAX_RECORDS_PER_SYTS: 5000
+    networks:
+      - cryptobot-network
+
+  model-fit:
+    image: cryptobot/model-fit:dev
+    container_name: c-model-fit
+    build:
+      context: ${PWD}
+      dockerfile: ./model/Dockerfile.model-fit
     volumes:
       - model_fit:/src/model_fit
     environment:
@@ -99,36 +58,85 @@ services:
       data:
         condition: service_completed_successfully
     networks:
-      - requester_network
+      - cryptobot-network
 
-  api-container:
-    image: cryptobot/web-api:latest
-    container_name: web-api
+  model-serve:
+      image: cryptobot/model-serve:dev
+      container_name: c-model-serve
+      build:
+        context: ${PWD}
+        dockerfile: ./model/Dockerfile.model-serve
+        args:
+          MODEL_SRC: model/train.py
+      depends_on:
+        model-fit:
+          condition: service_completed_successfully
+      command:
+        - --model_config_file=/models/models.config
+        - --model_config_file_poll_wait_seconds=60
+      ports:
+        - 8501:8501
+      volumes:
+        - model_fit:/models/
+      networks:
+        - cryptobot-network
+
+  requester:
+    image: cryptobot/requester:dev
+    container_name: c-requester
     build:
-      context: ${PWD}/web_api
+      context: ${PWD}
+      dockerfile: ./requester/Dockerfile
+    environment:
+      MYSQL_HOST_KLINES: db
+      MYSQL_USER_KLINES: root
+      MYSQL_DATABASE_KLINES: klines_history
+      MYSQL_PASSWORD_KLINES: password
+      MYSQL_HOST_PREDICTIONS: db
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_DATABASE_PREDICTIONS: klines_history
+      MYSQL_PASSWORD_PREDICTIONS: password
+      PREDICT_SERVER_HOST: model-serve:8501
+    entrypoint: "/fake-cron.sh"
+    depends_on:
+      db:
+        condition: service_healthy
+      model-fit:
+        condition: service_completed_successfully
+    volumes:
+      - ${PWD}/requester:/app
+    networks:
+      - cryptobot-network
+
+  web-api:
+    image: cryptobot/web-api:dev
+    container_name: c-web-api
+    build:
+      context: ${PWD}
+      dockerfile: ./web_api/Dockerfile
     environment:
       MYSQL_HOST_PREDICTIONS: db
       MYSQL_USER_PREDICTIONS: root
       MYSQL_DATABASE_PREDICTIONS: klines_history
       MYSQL_PASSWORD_PREDICTIONS: password
+    entrypoint: uvicorn
+    command: main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
+    volumes:
+      - ${PWD}/web_api:/app
     networks:
-      - requester_network
+      - cryptobot-network
     depends_on:
       db:
         condition: service_healthy
-    
+
 volumes:
-  klines_data: 
-    name: klines_data
-  preprocessing_data:
-    name: preprocessing_data
-  predictions_data: 
-    name: predictions_data
+  klines-data:
+    name: klines-data
   model_fit:
     name: model_fit
 
 networks:
-  requester_network:
-    external: true
+  cryptobot-network:
+    external: false
