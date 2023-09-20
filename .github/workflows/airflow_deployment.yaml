@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.CLOUD_PASSWORD }}
         port: 22
         script: |
-          whoaami
+          whoami
           ls -al
 
   # deploy-airflow:
