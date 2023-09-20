@@ -167,41 +167,49 @@ jobs:
   #         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
   #         cache-to: type=inline
 
-  deploy-kubernetes:
-    name: Kubernetes deployment
-    # needs: [build-and-push, package-model]
+  deploy-airflow:
+    name: Airflow deployment
     runs-on: ubuntu-latest
-    steps:
-
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-        install-missing-components: true
-
+    setps:
+  
     - name: Set up Airflow locally
       run: |
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
+        export KUBECONFIG=kubeconfig.yaml
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         brew install helm kind kubectl yq
         export LOCAL_DAGS_FOLDER=${PWD}/airflow/dags
         airflow-local-setup/setup.sh
         kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow
 
-    - name: Configure kubectl and deploy
-      run: |
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
-        echo "${{ secrets.CRYPTOBOT_SECRET }}" | base64 --decode > cryptobot-secret.yaml
-        cat cryptobot-secret.yaml
-        export KUBECONFIG=kubeconfig.yaml
-        kubectl config view
-        kubectl apply -f kubernetes/cryptobot-deployment.yaml
-        kubectl apply -f kubernetes/cryptobot-service.yaml
-        kubectl apply -f cryptobot-secret.yaml
-        kubectl apply -f kubernetes/cryptobot-pvc.yaml
-        kubectl apply -f kubernetes/cryptobot-ingress.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-minutelyTask.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-hourlyTask.yaml
-        kubectl apply -f kubernetes/cryptobot-cronjob-dailyTask.yaml
+  # deploy-kubernetes:
+  #   name: Kubernetes deployment
+  #   # needs: [build-and-push, package-model]
+  #   runs-on: ubuntu-latest
+  #   steps:
+
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v3
+
+  #   - name: Set up kubectl
+  #     uses: azure/setup-kubectl@v3
+  #     with:
+  #       version: 'latest'
+  #       install-missing-components: true
+
+  #   - name: Configure kubectl and deploy
+  #     run: |
+  #       echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
+  #       echo "${{ secrets.CRYPTOBOT_SECRET }}" | base64 --decode > cryptobot-secret.yaml
+  #       cat cryptobot-secret.yaml
+  #       export KUBECONFIG=kubeconfig.yaml
+  #       kubectl config view
+  #       kubectl apply -f kubernetes/cryptobot-deployment.yaml
+  #       kubectl apply -f kubernetes/cryptobot-service.yaml
+  #       kubectl apply -f cryptobot-secret.yaml
+  #       kubectl apply -f kubernetes/cryptobot-pvc.yaml
+  #       kubectl apply -f kubernetes/cryptobot-ingress.yaml
+  #       kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
+  #       kubectl apply -f kubernetes/cryptobot-cronjob-minutelyTask.yaml
+  #       kubectl apply -f kubernetes/cryptobot-cronjob-hourlyTask.yaml
+  #       kubectl apply -f kubernetes/cryptobot-cronjob-dailyTask.yaml
