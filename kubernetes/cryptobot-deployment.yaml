@@ -75,7 +75,6 @@ metadata:
   name: db
   namespace: default
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: db
