@@ -171,6 +171,9 @@ jobs:
     name: Airflow deployment
     runs-on: ubuntu-latest
     steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
   
     - name: Set up Airflow locally
       run: |
@@ -181,9 +184,7 @@ jobs:
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew install helm kind kubectl yq
         export LOCAL_DAGS_FOLDER=${PWD}/airflow/dags
-        echo ${PWD}
-        ls
-        cd ${PWD}/airflow-local-setup
+        cd airflow-local-setup
         ./setup.sh
         kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow
 
