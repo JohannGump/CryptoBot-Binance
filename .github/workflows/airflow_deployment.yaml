@@ -1,0 +1,47 @@
+name: Airflow deployment
+
+on:
+  push:
+    branches:
+      - airflow-kub 
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: executing remote ssh commands using ssh key
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.CLOUD_HOST }}
+        username: ${{ secrets.CLOUD_USER }}
+        key: ${{ secrets.CLOUD_SSH_KEY }}
+        password: ${{ secrets.CLOUD_PASSWORD }}
+        script: sh myscript.sh
+
+  # deploy-airflow:
+  #   name: Airflow deployment
+  #   runs-on: ubuntu-latest
+  #   steps:
+
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v3
+  
+  #   - name: Set up kubectl
+  #     uses: azure/setup-kubectl@v3
+  #     with:
+  #       version: 'latest'
+  #       install-missing-components: true
+
+  #   - name: Set up Airflow locally
+  #     run: |
+  #       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  #       echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $HOME/.bashrc
+  #       eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  #       brew install helm kind kubectl yq
+  #       export LOCAL_DAGS_FOLDER=${PWD}/airflow/dags
+  #       cd airflow-setup
+  #       sh setup.sh
+  #       kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow
