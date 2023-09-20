@@ -18,8 +18,10 @@ jobs:
         host: ${{ secrets.CLOUD_HOST }}
         username: ${{ secrets.CLOUD_USER }}
         key: ${{ secrets.CLOUD_SSH_KEY }}
-        password: ${{ secrets.CLOUD_PASSWORD }}
-        script: sh myscript.sh
+        #password: ${{ secrets.CLOUD_PASSWORD }}
+        port: 22
+        script: |
+          sh myscript.sh
 
   # deploy-airflow:
   #   name: Airflow deployment
