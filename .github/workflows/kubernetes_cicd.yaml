@@ -175,10 +175,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
   
+     - name: Set up kubectl
+       uses: azure/setup-kubectl@v3
+       with:
+          version: 'latest'
+          install-missing-components: true
+
     - name: Set up Airflow locally
       run: |
         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
+        kubectl config view
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $HOME/.bashrc
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
