@@ -170,7 +170,7 @@ jobs:
   deploy-airflow:
     name: Airflow deployment
     runs-on: ubuntu-latest
-    setps:
+    steps:
   
     - name: Set up Airflow locally
       run: |
