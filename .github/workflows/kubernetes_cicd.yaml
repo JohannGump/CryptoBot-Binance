@@ -182,8 +182,8 @@ jobs:
         brew install helm kind kubectl yq
         export LOCAL_DAGS_FOLDER=${PWD}/airflow/dags
         echo ${PWD}
-        echo ls
-        ./airflow-local-setup/setup.sh
+        cd airflow-local-setup
+        ./setup.sh
         kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow
 
   # deploy-kubernetes:
