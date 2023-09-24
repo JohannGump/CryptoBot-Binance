@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow
+  namespace: airflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: airflow
+  template:
+    metadata:
+      labels:
+        name: airflow
+    spec:
+      # automountServiceAccountToken: true
+      initContainers:
+      - image: apache/airflow:2.7.1
+        name: airflow-migrate-db
+        args:
+          - db
+          - migrate
+        envFrom:
+          - configMapRef:
+              name: airflow-config
+      - image: apache/airflow:2.7.1
+        name: airflow-create-user
+        args: ["users", "create", "--username", "cryptobot", "--password", "cryptic", "--firstname", "Peter", "--lastname", "Parker", "--role", "Admin", "--email", "spiderman@superhero.org"]
+        envFrom:
+          - configMapRef:
+              name: airflow-config
+      containers:
+      - name: airflow-webserver
+        image: apache/airflow:2.7.1
+        args:
+          - webserver
+          - -p
+          - "8080"
+        envFrom:
+          - configMapRef:
+              name: airflow-config
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: /opt/airflow/logs/
+            name: airflow-logs
+          - mountPath: /opt/airflow/dags/
+            name: airflow-dags
+      - name: airflow-scheduler
+        image: apache/airflow:2.7.1
+        args:
+          - scheduler
+        envFrom:
+          - configMapRef:
+              name: airflow-config
+        # TODO: sevice + ingress
+        ports:
+          - containerPort: 8080
+            hostPort: 8080
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: /opt/airflow/logs/
+            name: airflow-logs
+          - mountPath: /opt/airflow/dags/
+            name: airflow-dags
+          - name: exectutor-config-volume
+            mountPath: /opt/airflow/executor-pod-template.yml
+            subPath: executor-pod-template.yml
+      volumes:
+        - name: airflow-logs
+          hostPath:
+            path: /home/cryptobot/airflow/logs
+        - name: airflow-dags
+          hostPath:
+            path: /home/cryptobot/airflow/dags
+        - name: exectutor-config-volume
+          configMap:
+            name: exectutor-config

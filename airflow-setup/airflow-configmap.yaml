@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exectutor-config
+  namespace: airflow
+data:
+  executor-pod-template.yml: |
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: airflow-executor-template
+    spec:
+      containers:
+        - name: base
+          image: apache/airflow:2.7.1
+          envFrom:
+            - configMapRef:
+                name: airflow-config
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /opt/airflow/logs
+              name: airflow-logs
+            - mountPath: /opt/airflow/dags
+              name: airflow-dags
+      restartPolicy: Never
+      volumes:
+        - name: airflow-logs
+          hostPath:
+            path: /home/cryptobot/airflow/logs
+        - name: airflow-dags
+          hostPath:
+            path: /home/cryptobot/airflow/dags
