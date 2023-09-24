@@ -183,7 +183,6 @@ jobs:
         host: ${{ secrets.CLOUD_HOST }}
         username: ${{ secrets.CLOUD_USER }}
         key: ${{ secrets.CLOUD_SSH_KEY }}
-        passphrase: ""
         script: |
           rsync -avz --delete /airflow root@51.158.67.16:/
 
