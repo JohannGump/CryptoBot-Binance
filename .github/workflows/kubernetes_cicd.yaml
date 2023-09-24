@@ -176,13 +176,14 @@ jobs:
 
     - name: Checkout repository
       uses: actions/checkout@v3
-    
+
     - name: Copy folder to remote server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.CLOUD_HOST }}
         username: ${{ secrets.CLOUD_USER }}
         key: ${{ secrets.CLOUD_SSH_KEY }}
+        password: ${{ secrets.CLOUD_PASSWORD }}
         script: |
           rsync -avz --delete /airflow root@51.158.67.16:/
 
