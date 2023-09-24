@@ -170,7 +170,7 @@ jobs:
 
   deploy-airflow:
     name: Airflow deployment
-    needs: [build-and-push, package-model]
+    #needs: [build-and-push, package-model]
     runs-on: ubuntu-latest
     steps:
 
