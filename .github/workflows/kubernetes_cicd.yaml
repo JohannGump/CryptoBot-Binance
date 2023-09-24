@@ -183,9 +183,11 @@ jobs:
         host: ${{ secrets.CLOUD_HOST }}
         username: ${{ secrets.CLOUD_USER }}
         key: ${{ secrets.CLOUD_SSH_KEY }}
-        password: ${{ secrets.CLOUD_PASSWORD }}
+        port: 22
         script: |
-          rsync -avz --delete /airflow cryptobot@51.158.67.16:/
+        whoami
+        ls -al
+          #rsync -avz --delete /airflow cryptobot@51.158.67.16:/
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
