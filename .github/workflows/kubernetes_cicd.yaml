@@ -179,7 +179,7 @@ jobs:
 
     - name: Copy airflow folder on distant server
       run: |
-        rsync -avz -e "ssh -i ${{ secrets.CLOUD_SSH_KEY }}" /airflow ${{ secrets.CLOUD_USER }}@${{ secrets.CLOUD_HOST }}:/ariflow
+        rsync -avz -e "ssh -i /dev/stdin" /airflow ${{ secrets.CLOUD_USER }}@${{ secrets.CLOUD_HOST }}:/airflow < ${{ secrets.CLOUD_SSH_KEY }}
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
