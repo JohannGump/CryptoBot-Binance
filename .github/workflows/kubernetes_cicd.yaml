@@ -191,7 +191,7 @@ jobs:
         username: ${{ secrets.CLOUD_USER }}
         key: ${{ secrets.CLOUD_OPENSSH_KEY }}
         password: ${{ secrets.CLOUD_PASSWORD }}
-        source: "airflow/*"
+        source: "airflow/dags/*"
         target: /airflow
 
   # deploy-kubernetes:
