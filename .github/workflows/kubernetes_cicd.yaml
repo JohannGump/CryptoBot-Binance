@@ -185,17 +185,14 @@ jobs:
     #     scp -i kubernetes/cryptobot_key -r /airflow "${{ secrets.CLOUD_USER }}"@"${{ secrets.CLOUD_HOST }}":/home/cryptobot/test3
 
     - name: Copy folder to remote server
-      uses: appleboy/ssh-action@master
+      uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.CLOUD_HOST }}
         username: ${{ secrets.CLOUD_USER }}
         key: ${{ secrets.CLOUD_OPENSSH_KEY }}
         password: ${{ secrets.CLOUD_PASSWORD }}
-        script: |
-          whoami
-          ls
-          #mkdir -p /path/to/destination
-          #rsync -avz --delete /path/to/source/ user@hostname:/path/to/destination/
+        source: "airflow/*"
+        target: /airflow
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
