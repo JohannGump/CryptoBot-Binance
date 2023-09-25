@@ -180,7 +180,7 @@ jobs:
     - name: Copy airflow folder on distant server
       run: |
         sudo apt-get -y install sshpass
-        sshpass -p "${{ secrets.CLOUD_PASSWORD }}" scp -i "${{ secrets.CLOUD_SSH_KEY }}" -r /airflow "${{ secrets.CLOUD_USER }}"@${{ secrets.CLOUD_HOST }}:/home/cryptobot/airflow
+        sshpass -p "${{ secrets.CLOUD_PASSWORD }}" scp -i "${{ secrets.CLOUD_SSH_KEY }}" -r /airflow "${{ secrets.CLOUD_USER }}"@${{ secrets.CLOUD_HOST }}:/home/cryptobot/test3
  
 
   # deploy-kubernetes:
