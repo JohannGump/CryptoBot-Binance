@@ -192,7 +192,7 @@ jobs:
         key: ${{ secrets.CLOUD_OPENSSH_KEY }}
         password: ${{ secrets.CLOUD_PASSWORD }}
         source: "airflow/dags/*"
-        target: home/cryptobot/airflow
+        target: home/cryptobot/airflow/dags
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
