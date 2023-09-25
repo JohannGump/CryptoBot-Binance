@@ -177,17 +177,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Copy folder to remote server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.CLOUD_HOST }}
-        username: ${{ secrets.CLOUD_USER }}
-        key: ${{ secrets.CLOUD_SSH_KEY }}
-        port: 22
-        script: |
-          whoami
-          ls -al
-          #rsync -avz --delete /airflow cryptobot@51.158.67.16:/
+    - name: Copy airflow folder on distant server
+      run: |
+        rsync -avz -e "ssh -i ${{ secrets.CLOUD_SSH_KEY }}" /airflow ${{ secrets.CLOUD_USER }}@${{ secrets.CLOUD_HOST }}:/ariflow
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
