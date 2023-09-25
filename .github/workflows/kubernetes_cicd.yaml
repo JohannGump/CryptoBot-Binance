@@ -182,7 +182,10 @@ jobs:
         sudo apt-get -y install sshpass
         #echo "${{ secrets.CLOUD_OPENSSH_KEY }}" > cryptobot_key
         #cat cryptobot_key
-        sshpass -p "${{ secrets.CLOUD_PASSWORD }}" scp -i kubernetes/cryptobot_key -r /airflow "${{ secrets.CLOUD_USER }}"@"${{ secrets.CLOUD_HOST }}":/home/cryptobot/test3
+        scp -i kubernetes/cryptobot_key -r /airflow "${{ secrets.CLOUD_USER }}"@"${{ secrets.CLOUD_HOST }}":/home/cryptobot/test3
+
+
+
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
