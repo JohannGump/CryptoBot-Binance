@@ -170,7 +170,7 @@ jobs:
 
   deploy-airflow:
     name: Airflow deployment
-    needs: deploy-kubernetes
+    #needs: deploy-kubernetes
     runs-on: ubuntu-latest
     steps:
 
