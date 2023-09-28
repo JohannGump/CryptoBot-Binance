@@ -16,7 +16,7 @@ metadata:
   namespace: default
 spec:
   rules:
-    - host: 127.0.0.1
+    - host: localhost
       http:
         paths:
           - path: /
