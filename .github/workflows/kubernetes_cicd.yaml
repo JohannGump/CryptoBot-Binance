@@ -188,16 +188,16 @@ jobs:
         source: "airflow/dags/*"
         target: /home/cryptobot
 
-    - name: Modules deployment
-      run : |
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
-        echo "${{ secrets.AIRFLOW_CONFIGMAP }}" | base64 --decode > airflow-config-secret.yaml
-        export KUBECONFIG=kubeconfig.yaml
-        kubectl config view
-        kubectl apply -f airflow-setup/airflow-cluster.yaml
-        kubectl apply -f airflow-config-secret.yaml     
-        kubectl apply -f airflow-setup/airflow-configmap.yaml
-        kubectl apply -f airflow-setup/airflow-deployment.yaml
+    # - name: Modules deployment
+    #   run : |
+    #     echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
+    #     echo "${{ secrets.AIRFLOW_CONFIGMAP }}" | base64 --decode > airflow-config-secret.yaml
+    #     export KUBECONFIG=kubeconfig.yaml
+    #     kubectl config view
+    #     kubectl apply -f airflow-setup/airflow-cluster.yaml
+    #     kubectl apply -f airflow-config-secret.yaml     
+    #     kubectl apply -f airflow-setup/airflow-configmap.yaml
+    #     kubectl apply -f airflow-setup/airflow-deployment.yaml
 
   deploy-kubernetes:
     name: Kubernetes deployment
