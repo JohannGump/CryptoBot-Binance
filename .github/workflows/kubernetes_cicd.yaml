@@ -177,13 +177,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # - name: Copy airflow folder on distant server
-    #   run: |
-    #     sudo apt-get -y install sshpass
-    #     #echo "${{ secrets.CLOUD_OPENSSH_KEY }}" > cryptobot_key
-    #     #cat cryptobot_key
-    #     scp -i kubernetes/cryptobot_key -r /airflow "${{ secrets.CLOUD_USER }}"@"${{ secrets.CLOUD_HOST }}":/home/cryptobot/test3
-
+    # copy of dag folder
     - name: Copy folder to remote server
       uses: appleboy/scp-action@master
       with:
@@ -193,6 +187,14 @@ jobs:
         password: ${{ secrets.CLOUD_PASSWORD }}
         source: "airflow/dags/*"
         target: /home/cryptobot
+
+    - name: Modules deployment
+      run : |
+        echo "${{ secrets.AIRFLOW_CONFIGMAP }}" | base64 --decode > airflow-config-secret.yaml
+        kubectl apply -f airflow-setup/airflow-cluster.yaml
+        kubectl apply -f airflow-config-secret.yaml     
+        kubectl apply -f airflow-configmap.yaml
+        kubectl apply -f airflow-deployment.yaml
 
   # deploy-kubernetes:
   #   name: Kubernetes deployment
