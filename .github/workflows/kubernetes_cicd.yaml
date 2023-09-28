@@ -198,8 +198,8 @@ jobs:
         kubectl apply -f airflow-config-secret.yaml     
         kubectl apply -f airflow-setup/airflow-configmap.yaml
         kubectl apply -f airflow-setup/airflow-deployment.yaml
-        kubectl apply -f airflow-setup/airflow-service.yaml
-        kubectl apply -f airflow-setup/airflow-ingress.yaml
+        #kubectl apply -f airflow-setup/airflow-service.yaml
+        #kubectl apply -f airflow-setup/airflow-ingress.yaml
 
   deploy-kubernetes:
     name: Kubernetes deployment
