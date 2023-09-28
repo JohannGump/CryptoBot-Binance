@@ -52,7 +52,7 @@ spec:
       port: 80  
       targetPort: 80
   type: LoadBalancer
-  ---
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,7 +61,7 @@ metadata:
 spec:
   type: ExternalName
   externalName: api-svc.api
-  ---
+---
 apiVersion: v1
 kind: Service
 metadata:
