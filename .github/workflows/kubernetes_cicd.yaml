@@ -8,169 +8,169 @@ on:
 
 jobs:
 
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   steps:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
 
-  #   - name: Set up Docker Buildx
-  #     uses: docker/setup-buildx-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-  #   - uses: actions/checkout@v3
-  #   - name: Test Python Code
-  #     run: | 
-  #       pip3 install -r requirements.txt 
-  #       pytest
+    - uses: actions/checkout@v3
+    - name: Test Python Code
+      run: | 
+        pip3 install -r requirements.txt 
+        pytest
 
-  # build-and-push:
-  #   name: Build and push images
-  #   runs-on: ubuntu-latest
-  #   steps:
+  build-and-push:
+    name: Build and push images
+    runs-on: ubuntu-latest
+    steps:
       
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-  #     - name: Login to Docker Hub
-  #       uses: docker/login-action@v2
-  #       with:
-  #         username: ${{ secrets.DOCKER_HUB_USER }}
-  #         password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-  #     - name: Build & push model-fit image
-  #       uses: docker/build-push-action@v4
-  #       with:
-  #         context: .
-  #         file: model/Dockerfile.model-fit
-  #         push: true
-  #         tags: |
-  #           ${{ secrets.DOCKER_HUB_USER }}/model-fit:${{ github.sha }}
-  #           ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
-  #         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
-  #         cache-to: type=inline
+      - name: Build & push model-fit image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: model/Dockerfile.model-fit
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/model-fit:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
+          cache-to: type=inline
 
-  #     - name: Build & push requester-app image
-  #       uses: docker/build-push-action@v4
-  #       with:
-  #         context: .
-  #         file: requester/Dockerfile
-  #         push: true
-  #         tags: |
-  #           ${{ secrets.DOCKER_HUB_USER }}/requester-app:${{ github.sha }}
-  #           ${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
-  #         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
-  #         cache-to: type=inline
+      - name: Build & push requester-app image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: requester/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/requester-app:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/requester-app:latest
+          cache-to: type=inline
 
-  #     - name: Build & push cryptobot-web-api image
-  #       uses: docker/build-push-action@v4
-  #       with:
-  #         context: .
-  #         file: web_api/Dockerfile
-  #         push: true
-  #         tags: |
-  #           ${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:${{ github.sha }}
-  #           ${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:latest
-  #         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:latest
-  #         cache-to: type=inline
+      - name: Build & push cryptobot-web-api image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: web_api/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/cryptobot-web-api:latest
+          cache-to: type=inline
 
-  # train-model:
-  #   name: Train models
-  #   needs: build-and-push
-  #   runs-on: ubuntu-latest
-  #   services:
-  #     database:
-  #       # MySQL server (to be replaced with an external one)
-  #       image: mysql:8.1.0
-  #       ports:
-  #         - 3306:3306
-  #       env:
-  #         MYSQL_DATABASE: klines_history
-  #         MYSQL_ROOT_PASSWORD: password
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+  train-model:
+    name: Train models
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    services:
+      database:
+        # MySQL server (to be replaced with an external one)
+        image: mysql:8.1.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: klines_history
+          MYSQL_ROOT_PASSWORD: password
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: '3.10'
-  #         cache: 'pip'
-  #         cache-dependency-path: |
-  #           binance_bridge/requirements.txt
-  #           data/requirements.txt
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: |
+            binance_bridge/requirements.txt
+            data/requirements.txt
 
-  #     - run: pip install -r binance_bridge/requirements.txt -r data/requirements.txt 
+      - run: pip install -r binance_bridge/requirements.txt -r data/requirements.txt 
 
-  #     - name: Loads training data
-  #       env:
-  #         KLINESDB_HOST: localhost
-  #         KLINESDB_USER: root
-  #         KLINESDB_PASSWORD: password
-  #         KLINESDB_DBNAME: klines_history
-  #         KLINES_MAX_RECORDS_PER_SYTS: 5000
-  #       run: |
-  #         python data/build_history.py
+      - name: Loads training data
+        env:
+          KLINESDB_HOST: localhost
+          KLINESDB_USER: root
+          KLINESDB_PASSWORD: password
+          KLINESDB_DBNAME: klines_history
+          KLINES_MAX_RECORDS_PER_SYTS: 5000
+        run: |
+          python data/build_history.py
 
-  #     - name: Fit models
-  #       run: |
-  #         docker run --rm \
-  #         --network ${{ job.container.network }} \
-  #         -v /model_fit:/src/model_fit \
-  #         -e KLINESDB_HOST=database \
-  #         -e KLINESDB_USER=root \
-  #         -e KLINESDB_PASSWORD=password \
-  #         -e KLINESDB_DBNAME=klines_history \
-  #         ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
+      - name: Fit models
+        run: |
+          docker run --rm \
+          --network ${{ job.container.network }} \
+          -v /model_fit:/src/model_fit \
+          -e KLINESDB_HOST=database \
+          -e KLINESDB_USER=root \
+          -e KLINESDB_PASSWORD=password \
+          -e KLINESDB_DBNAME=klines_history \
+          ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
 
-  #     - name: Upload artifacts
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: models.${{ github.sha }}
-  #         path: /model_fit
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: models.${{ github.sha }}
+          path: /model_fit
 
-  # package-model:
-  #   name: TFS embedding
-  #   needs: train-model
-  #   runs-on: ubuntu-latest
-  #   steps:
+  package-model:
+    name: TFS embedding
+    needs: train-model
+    runs-on: ubuntu-latest
+    steps:
 
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Download artifacts
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: models.${{ github.sha }}
-  #         path: models
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: models.${{ github.sha }}
+          path: models
 
-  #     - name: Login to Docker Hub
-  #       uses: docker/login-action@v2
-  #       with:
-  #         username: ${{ secrets.DOCKER_HUB_USER }}
-  #         password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-  #     - name: Build & push model-serve
-  #       uses: docker/build-push-action@v4
-  #       with:
-  #         context: .
-  #         file: model/Dockerfile.model-serve
-  #         build-args: |
-  #           MODEL_SRC=models
-  #         push: true
-  #         tags: |
-  #           ${{ secrets.DOCKER_HUB_USER }}/model-serve:${{ github.sha }}
-  #           ${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
-  #         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
-  #         cache-to: type=inline
+      - name: Build & push model-serve
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: model/Dockerfile.model-serve
+          build-args: |
+            MODEL_SRC=models
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/model-serve:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
+          cache-to: type=inline
 
   deploy-airflow:
     name: Airflow deployment
-    #needs: [build-and-push, package-model]
+    needs: deploy-kubernetes
     runs-on: ubuntu-latest
     steps:
 
@@ -201,34 +201,34 @@ jobs:
         kubectl apply -f airflow-setup/airflow-service.yaml
         kubectl apply -f airflow-setup/airflow-ingress.yaml
 
-  # deploy-kubernetes:
-  #   name: Kubernetes deployment
-  #   needs: deploy-airflow
-  #   runs-on: ubuntu-latest
-  #   steps:
+  deploy-kubernetes:
+    name: Kubernetes deployment
+    needs: [build-and-push, package-model]
+    runs-on: ubuntu-latest
+    steps:
 
-  #   - name: Checkout repository
-  #     uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-  #   - name: Set up kubectl
-  #     uses: azure/setup-kubectl@v3
-  #     with:
-  #       version: 'latest'
-  #       install-missing-components: true
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        install-missing-components: true
 
-  #   - name: Configure kubectl and deploy
-  #     run: |
-  #       echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
-  #       echo "${{ secrets.CRYPTOBOT_SECRET }}" | base64 --decode > cryptobot-secret.yaml
-  #       cat cryptobot-secret.yaml
-  #       export KUBECONFIG=kubeconfig.yaml
-  #       kubectl config view
-  #       kubectl apply -f kubernetes/cryptobot-deployment.yaml
-  #       kubectl apply -f kubernetes/cryptobot-service.yaml
-  #       kubectl apply -f cryptobot-secret.yaml
-  #       kubectl apply -f kubernetes/cryptobot-pvc.yaml
-  #       kubectl apply -f kubernetes/cryptobot-ingress.yaml
-  #       kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
-  #       kubectl apply -f kubernetes/cryptobot-cronjob-minutelyTask.yaml
-  #       kubectl apply -f kubernetes/cryptobot-cronjob-hourlyTask.yaml
-  #       kubectl apply -f kubernetes/cryptobot-cronjob-dailyTask.yaml
+    - name: Configure kubectl and deploy
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
+        echo "${{ secrets.CRYPTOBOT_SECRET }}" | base64 --decode > cryptobot-secret.yaml
+        cat cryptobot-secret.yaml
+        export KUBECONFIG=kubeconfig.yaml
+        kubectl config view
+        kubectl apply -f kubernetes/cryptobot-deployment.yaml
+        kubectl apply -f kubernetes/cryptobot-service.yaml
+        kubectl apply -f cryptobot-secret.yaml
+        kubectl apply -f kubernetes/cryptobot-pvc.yaml
+        kubectl apply -f kubernetes/cryptobot-ingress.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-weeklyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-minutelyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-hourlyTask.yaml
+        kubectl apply -f kubernetes/cryptobot-cronjob-dailyTask.yaml
