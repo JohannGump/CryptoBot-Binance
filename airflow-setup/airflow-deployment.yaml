@@ -44,7 +44,7 @@ spec:
           - mountPath: /opt/airflow/logs/
             name: airflow-logs
           - mountPath: /opt/airflow/dags/
-            name: airflow-dags
+            name: airflow-dags   
       - name: airflow-scheduler
         image: apache/airflow:2.7.1
         args:
