@@ -4,8 +4,14 @@ metadata:
   name: airflow-ingress
   namespace: airflow
 spec:
-  defaultBackend:
-    service:
-      name: airflow
-      port:
-        number: 8080
+  rules:
+    - host: airflow
+      http:
+        paths:
+          - path: /airflow
+            pathType: Prefix
+            backend:
+              service:
+                name: airflow
+                port:
+                  number: 8080
