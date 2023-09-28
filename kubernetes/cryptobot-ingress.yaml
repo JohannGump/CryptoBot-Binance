@@ -12,30 +12,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cryptobot-ingress
+  name: ingress-api
   namespace: default
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
 spec:
-  tls:
-  - hosts:
-    - localhost
-    secretName: secret-name
   rules:
   - host: localhost
     http:
       paths:
-      - path: /admin
+      - path: /
         pathType: Prefix
         backend:
           service:
-            name: api-svc-bridge
-            port:
-              number: 80
-      - path: /airflow
-        pathType: Prefix
-        backend:
-          service:
-            name: airflow-svc-bridge
+            name: api-container
             port:
               number: 80
