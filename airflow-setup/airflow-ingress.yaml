@@ -5,7 +5,7 @@ metadata:
   namespace: airflow
 spec:
   rules:
-    - host: airflow
+    - host: localhost
       http:
         paths:
           - path: /airflow
