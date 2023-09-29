@@ -32,7 +32,7 @@ klin_conn = {
 def sql_to_df(connector, table):    
     connexion = mysql.connector.connect(**connector)
     curseur = connexion.cursor()
-    requete_sql = f"SELECT * FROM {table}"
+    requete_sql = f"SELECT * FROM {table} WHERE TimeStep != 'WEEKLY'"
     curseur.execute(requete_sql)
     dataframe = pd.DataFrame(curseur.fetchall(), columns=curseur.column_names)
     curseur.close()
