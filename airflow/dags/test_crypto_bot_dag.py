@@ -18,11 +18,12 @@ my_dag = DAG(
 
 
 klin_conn = {
-    'host': 'db',
-    'user': 'root',
-    'password': 'password',
-    'database': 'klines_history',
-    'port': "3306"
+    'host': os.getenv('MYSQL_HOST_PREDICTIONS'), #db in prod
+    'user': os.getenv('MYSQL_USER_PREDICTIONS'),
+    'password': os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
+    'database': os.getenv('MYSQL_DATABASE_PREDICTIONS'),
+    'port': "3306",
+    'auth_plugin': 'mysql_native_password'
 }
 
 # definition of the function to execute
@@ -42,7 +43,6 @@ def print_data():
 
     for ligne in resultats:
         print(ligne)
-
 
 
 
