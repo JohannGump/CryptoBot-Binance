@@ -70,20 +70,16 @@ spec:
 status: {}
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: db
   namespace: default
 spec:
+  serviceName: "db"
   replicas: 1
   selector:
     matchLabels:
       app: db
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
   template:
     metadata:
       labels: 
@@ -116,9 +112,12 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/mysql
               name: klines-data
-      restartPolicy: Always
-      volumes:
-        - name: klines-data
-          persistentVolumeClaim:
-            claimName: klines-data
+  volumeClaimTemplates:
+    - metadata:
+        name: klines-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
 status: {}
