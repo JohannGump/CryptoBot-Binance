@@ -15,7 +15,7 @@ def simple_test_dag():
         """
         #### Task 1
         """
-        print("task 1")
+        print("task Bidoubi")
 
     @task
     def task_2():
