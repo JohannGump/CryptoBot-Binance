@@ -1,0 +1,23 @@
+[2023-09-20 12:00:56,472] {taskinstance.py:896} INFO - Dependencies all met for <TaskInstance: check_precision_dag.check_precision_task 2023-09-20T12:00:55.324594+00:00 [queued]>
+[2023-09-20 12:00:56,484] {taskinstance.py:896} INFO - Dependencies all met for <TaskInstance: check_precision_dag.check_precision_task 2023-09-20T12:00:55.324594+00:00 [queued]>
+[2023-09-20 12:00:56,484] {taskinstance.py:1087} INFO - 
+--------------------------------------------------------------------------------
+[2023-09-20 12:00:56,485] {taskinstance.py:1088} INFO - Starting attempt 1 of 1
+[2023-09-20 12:00:56,485] {taskinstance.py:1089} INFO - 
+--------------------------------------------------------------------------------
+[2023-09-20 12:00:56,500] {taskinstance.py:1107} INFO - Executing <Task(PythonOperator): check_precision_task> on 2023-09-20T12:00:55.324594+00:00
+[2023-09-20 12:00:56,504] {standard_task_runner.py:52} INFO - Started process 4120 to run task
+[2023-09-20 12:00:56,509] {standard_task_runner.py:76} INFO - Running: ['***', 'tasks', 'run', 'check_precision_dag', 'check_precision_task', '2023-09-20T12:00:55.324594+00:00', '--job-id', '34', '--pool', 'default_pool', '--raw', '--subdir', 'DAGS_FOLDER/check_precision_dag.py', '--cfg-path', '/tmp/tmpf_jye604', '--error-file', '/tmp/tmpqnn553aj']
+[2023-09-20 12:00:56,510] {standard_task_runner.py:77} INFO - Job 34: Subtask check_precision_task
+[2023-09-20 12:00:56,554] {logging_mixin.py:104} INFO - Running <TaskInstance: check_precision_dag.check_precision_task 2023-09-20T12:00:55.324594+00:00 [running]> on host f0aa70fa8e73
+[2023-09-20 12:00:56,608] {taskinstance.py:1302} INFO - Exporting the following env vars:
+AIRFLOW_CTX_DAG_OWNER=***
+AIRFLOW_CTX_DAG_ID=check_precision_dag
+AIRFLOW_CTX_TASK_ID=check_precision_task
+AIRFLOW_CTX_EXECUTION_DATE=2023-09-20T12:00:55.324594+00:00
+AIRFLOW_CTX_DAG_RUN_ID=manual__2023-09-20T12:00:55.324594+00:00
+[2023-09-20 12:00:56,811] {logging_mixin.py:104} INFO - erreur moyenne calculee : 15.31%
+[2023-09-20 12:00:56,812] {python.py:151} INFO - Done. Returned value was: None
+[2023-09-20 12:00:56,822] {taskinstance.py:1211} INFO - Marking task as SUCCESS. dag_id=check_precision_dag, task_id=check_precision_task, execution_date=20230920T120055, start_date=20230920T120056, end_date=20230920T120056
+[2023-09-20 12:00:56,845] {taskinstance.py:1265} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2023-09-20 12:00:56,880] {local_task_job.py:151} INFO - Task exited with return code 0

@@ -1,6 +1,133 @@
 version: '3.8'
+x-airflow-common: &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.1.1}
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+    AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+    AIRFLOW__SMTP__SMTP_HOST: "smtp.gmail.com"
+    AIRFLOW__SMTP__SMTP_PORT: 587
+    AIRFLOW__SMTP__SMTP_USER: "de.airflow@gmail.com"
+    AIRFLOW__SMTP__SMTP_PASSWORD: "cfsrvkongsobheta"
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: "de.airflow@gmail.com"
+
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- pymongo}
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+  networks:
+    - cryptobot-network
 
 services:
+  postgres:
+    container_name: c-airflow-postgres
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+    networks:
+      - cryptobot-network
+
+  redis:
+    container_name: c-airflow-redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+    networks:
+      - cryptobot-network
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-webserver
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-worker:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-worker
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-init
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+
+  flower:
+    <<: *airflow-common
+    container_name: c-airflow-flower
+    command: celery flower
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+
 
   db:
     image: mysql:8.1.0
@@ -27,7 +154,7 @@ services:
     image: cryptobot/training-data:dev
     container_name: c-training-data
     build:
-      context: ${PWD}
+      context: .
       dockerfile: ./data/Dockerfile
     depends_on:
       db:
@@ -45,7 +172,7 @@ services:
     image: cryptobot/model-fit:dev
     container_name: c-model-fit
     build:
-      context: ${PWD}
+      context: .
       dockerfile: ./model/Dockerfile.model-fit
     volumes:
       - model_fit:/src/model_fit
@@ -64,7 +191,7 @@ services:
       image: cryptobot/model-serve:dev
       container_name: c-model-serve
       build:
-        context: ${PWD}
+        context: .
         dockerfile: ./model/Dockerfile.model-serve
         args:
           MODEL_SRC: model/train.py
@@ -85,7 +212,7 @@ services:
     image: cryptobot/requester:dev
     container_name: c-requester
     build:
-      context: ${PWD}
+      context: .
       dockerfile: ./requester/Dockerfile
     environment:
       MYSQL_HOST_KLINES: db
@@ -117,7 +244,7 @@ services:
       model-fit:
         condition: service_completed_successfully
     volumes:
-      - ${PWD}/requester:/app
+      - ./requester:/app
     networks:
       - cryptobot-network
 
@@ -125,7 +252,7 @@ services:
     image: cryptobot/web-api:dev
     container_name: c-web-api
     build:
-      context: ${PWD}
+      context: .
       dockerfile: ./web_api/Dockerfile
     environment:
       MYSQL_HOST_PREDICTIONS: db
@@ -137,7 +264,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ${PWD}/web_api:/app
+      - ./web_api:/app
     networks:
       - cryptobot-network
     depends_on:
@@ -149,7 +276,11 @@ volumes:
     name: klines-data
   model_fit:
     name: model_fit
+  postgres-db-volume:
 
 networks:
   cryptobot-network:
     external: false
+
+
+
