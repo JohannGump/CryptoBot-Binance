@@ -3,6 +3,7 @@ from airflow.utils.dates import days_ago
 from airflow.operators.python import PythonOperator
 import pandas as pd
 import mysql.connector
+import datetime
 import os
 
 my_dag = DAG(
