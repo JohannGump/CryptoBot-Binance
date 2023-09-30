@@ -37,7 +37,7 @@ jobs:
           KLINESDB_USER: root
           KLINESDB_PASSWORD: password
           KLINESDB_DBNAME: klines_history
-          KLINES_MAX_RECORDS_PER_SYTS: 5000
+          KLINES_MAX_RECORDS_PER_SYTS: ${{ github.event.max_samples_fit || 5000 }}
         run: |
           python data/build_history.py
 
@@ -67,7 +67,7 @@ jobs:
     steps:
 
       - id: minor-version
-        run: echo "value=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+        run: echo "value=$(date +'%y%m%d%H%M')" >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v3
