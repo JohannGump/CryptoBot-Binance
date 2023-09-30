@@ -67,7 +67,7 @@ jobs:
     steps:
 
       - id: minor-version
-        run: echo "::set-output name=value::$(date +'%Y%m%d')"
+        run: echo "value=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v3
