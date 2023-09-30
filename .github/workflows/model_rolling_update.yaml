@@ -1,8 +1,8 @@
-name: model-deployment
+name: Model rolling-update
 on:
   repository_dispatch:
     types:
-      - fit-models
+      - model-rolling-update
 jobs:
 
   train-model:
@@ -116,7 +116,7 @@ jobs:
         version: 'latest'
         install-missing-components: true
 
-    - name: Apply rolling update
+    - name: Apply update
       run: |
         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
