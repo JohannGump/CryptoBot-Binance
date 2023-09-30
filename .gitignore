@@ -1,0 +1,10 @@
+.pytest_cache
+.venv
+.vscode
+.DS_Store 
+.env
+__pycache__
+.log
+airflow/logs/
+to_conserve
+airflow/brouillon.ipynb

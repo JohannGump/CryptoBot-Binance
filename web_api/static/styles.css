@@ -1,0 +1,96 @@
+html {
+    font: 18px Verdana;
+    --u-color: rgb(22, 185, 22);
+    --d-color: red
+}
+
+.symbol {
+    display: flex;
+    align-items: center;
+}
+.symbol::before {
+    content: "";
+    display: inline-block;
+    margin-right: 10px;
+    width: 34px;
+    height: 34px;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+.symbol.ADAUSDT::before { background-image: url(crypto-icons/ADAUSDT.svg); }
+.symbol.BTCUSDT::before { background-image: url(crypto-icons/BTCUSDT.svg); }
+.symbol.BNBUSDT::before { background-image: url(crypto-icons/BNBUSDT.svg); }
+.symbol.ETHUSDT::before { background-image: url(crypto-icons/ETHUSDT.svg); }
+.symbol.XRPUSDT::before { background-image: url(crypto-icons/XRPUSDT.svg); }
+
+[class*="pct-change"] {
+    display: flex;
+    align-items: center;
+}
+[class*="pct-change"]::before {
+    font-weight: bold;
+    font-size: .8rem;
+    margin-right: 4px;
+}
+.pct-change-u { color: var(--u-color); }
+.pct-change-d { color: var(--d-color); }
+.pct-change-u::before { content: "↗"; }
+.pct-change-d::before { content: "↘"; }
+.pct-change-u.trend-vary::before { content: "+"; margin-right: 2px; }
+.pct-change-d.trend-vary::before { content: "-"; margin-right: 2px; }
+
+.lds-ellipsis {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+.lds-ellipsis div {
+    position: absolute;
+    top: 33px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: black;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.lds-ellipsis div:nth-child(1) {
+    left: 8px;
+    animation: lds-ellipsis1 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(2) {
+    left: 8px;
+    animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(3) {
+    left: 32px;
+    animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(4) {
+    left: 56px;
+    animation: lds-ellipsis3 0.6s infinite;
+}
+@keyframes lds-ellipsis1 {
+    0% {
+        transform: scale(0);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+@keyframes lds-ellipsis3 {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(0);
+    }
+}
+@keyframes lds-ellipsis2 {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(24px, 0);
+    }
+}

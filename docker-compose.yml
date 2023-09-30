@@ -1,0 +1,286 @@
+version: '3.8'
+x-airflow-common: &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.1.1}
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+    AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+    AIRFLOW__SMTP__SMTP_HOST: "smtp.gmail.com"
+    AIRFLOW__SMTP__SMTP_PORT: 587
+    AIRFLOW__SMTP__SMTP_USER: "de.airflow@gmail.com"
+    AIRFLOW__SMTP__SMTP_PASSWORD: "cfsrvkongsobheta"
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: "de.airflow@gmail.com"
+
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- pymongo}
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+  networks:
+    - cryptobot-network
+
+services:
+  postgres:
+    container_name: c-airflow-postgres
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+    networks:
+      - cryptobot-network
+
+  redis:
+    container_name: c-airflow-redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+    networks:
+      - cryptobot-network
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-webserver
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-worker:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-worker
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: c-airflow-airflow-init
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+
+  flower:
+    <<: *airflow-common
+    container_name: c-airflow-flower
+    command: celery flower
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+
+
+  db:
+    image: mysql:8.1.0
+    container_name: c-db
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      MYSQL_DATABASE: klines_history
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - klines-data:/var/lib/mysql
+    networks:
+      - cryptobot-network
+
+  data:
+    image: cryptobot/training-data:dev
+    container_name: c-training-data
+    build:
+      context: .
+      dockerfile: ./data/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KLINESDB_HOST: db
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: password
+      KLINESDB_DBNAME: klines_history
+      KLINES_MAX_RECORDS_PER_SYTS: 5000
+    networks:
+      - cryptobot-network
+
+  model-fit:
+    image: cryptobot/model-fit:dev
+    container_name: c-model-fit
+    build:
+      context: .
+      dockerfile: ./model/Dockerfile.model-fit
+    volumes:
+      - model_fit:/src/model_fit
+    environment:
+      KLINESDB_HOST: db
+      KLINESDB_USER: root
+      KLINESDB_PASSWORD: password
+      KLINESDB_DBNAME: klines_history
+    depends_on:
+      data:
+        condition: service_completed_successfully
+    networks:
+      - cryptobot-network
+
+  model-serve:
+      image: cryptobot/model-serve:dev
+      container_name: c-model-serve
+      build:
+        context: .
+        dockerfile: ./model/Dockerfile.model-serve
+        args:
+          MODEL_SRC: model/train.py
+      depends_on:
+        model-fit:
+          condition: service_completed_successfully
+      command:
+        - --model_config_file=/models/models.config
+        - --model_config_file_poll_wait_seconds=60
+      ports:
+        - 8501:8501
+      volumes:
+        - model_fit:/models/
+      networks:
+        - cryptobot-network
+
+  requester:
+    image: cryptobot/requester:dev
+    container_name: c-requester
+    build:
+      context: .
+      dockerfile: ./requester/Dockerfile
+    environment:
+      MYSQL_HOST_KLINES: db
+      MYSQL_USER_KLINES: root
+      MYSQL_DATABASE_KLINES: klines_history
+      MYSQL_PASSWORD_KLINES: password
+      MYSQL_HOST_PREDICTIONS: db
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_DATABASE_PREDICTIONS: klines_history
+      MYSQL_PASSWORD_PREDICTIONS: password
+      PREDICT_SERVER_HOST: model-serve:8501
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        cd /app
+        while true
+        do
+            timeteps=('minutely' 'hourly' 'daily' 'weekly')
+            for TIMESTEP in $${timeteps[*]}
+            do
+                TIMESTEP=$$TIMESTEP ./entrypoint.sh
+            done
+            sleep 60
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+      model-fit:
+        condition: service_completed_successfully
+    volumes:
+      - ./requester:/app
+    networks:
+      - cryptobot-network
+
+  web-api:
+    image: cryptobot/web-api:dev
+    container_name: c-web-api
+    build:
+      context: .
+      dockerfile: ./web_api/Dockerfile
+    environment:
+      MYSQL_HOST_PREDICTIONS: db
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_DATABASE_PREDICTIONS: klines_history
+      MYSQL_PASSWORD_PREDICTIONS: password
+    entrypoint: uvicorn
+    command: main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./web_api:/app
+    networks:
+      - cryptobot-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  klines-data:
+    name: klines-data
+  model_fit:
+    name: model_fit
+  postgres-db-volume:
+
+networks:
+  cryptobot-network:
+    external: false
+
+
+

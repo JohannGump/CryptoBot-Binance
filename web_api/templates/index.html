@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div>
+    <table id="home-stats" class="w-full mt-10">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="text-left text-sm font-normal">Prix actuel</th>
+                <th class="text-left text-sm font-normal">Variation +4 jours</th>
+                <th class="text-left text-sm font-normal">Prix +4 jours</th>
+                <th class="text-left text-sm font-normal"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in predictions %}
+            <tr class="h-20 border-b">
+                <td>
+                    <div class="flex symbol {{ row.Symbol }}">
+                        <span>{{ symbol_name(row.Symbol) }}<br>
+                        <small class="block w-100">{{ symbol_label(row.Symbol) }}</small>
+                    </div>
+                </td>
+                <td>${{ row.NowClosePrice }}</td>
+                <td>{{ pct_change_trend(row.PctChange) }}</td>
+                <td>${{ "%.4f" % row.ClosePrice }}</td>
+                <td><a href="/forecast/{{ symbol_slug(row.Symbol) }}/daily" class="underline">
+                    <small>détails ></small>
+                </a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-container
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-container
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: api-container
+    spec:
+      containers:
+        - image: mlops23cryptobot/cryptobot-web-api:latest
+          name: web-api
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          resources: {}
+          envFrom:
+            - secretRef:
+                name: api-secrets
+          volumeMounts:
+            - mountPath: /log
+              name: log-data
+            - mountPath: /app/data
+              name: preprocessing-data
+      volumes:
+        - name: log-data
+          persistentVolumeClaim:
+            claimName: log-data 
+        - name: preprocessing-data
+          persistentVolumeClaim:
+            claimName: preprocessing-data      
+      restartPolicy: Always
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: c-predict
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: c-predict
+  template:
+    metadata:
+      labels:
+        app: c-predict
+    spec:
+      containers:
+        - image: mlops23cryptobot/model-serve:latest
+          name: c-predict
+          ports:
+            - containerPort: 8501
+              protocol: TCP
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: default
+spec:
+  serviceName: "db"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels: 
+        app: db
+    spec:
+      containers:
+        - envFrom:
+            - secretRef:
+                name: db-secrets
+          image: mysql:latest
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: db
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          resources: {}
+          securityContext:
+            capabilities:
+              add:
+                - SYS_NICE
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: klines-data
+  volumeClaimTemplates:
+    - metadata:
+        name: klines-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+status: {}
