@@ -62,7 +62,12 @@ jobs:
     name: TFS embedding
     needs: train-model
     runs-on: ubuntu-latest
+    outputs:
+        minor-version: ${{ steps.minor-version.outputs.value }}
     steps:
+
+      - id: minor-version
+        run: echo "::set-output name=value::$(date +'%Y%m%d')"
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -91,7 +96,7 @@ jobs:
             MODEL_SRC=models
           push: true
           tags: |
-            ${{ secrets.DOCKER_HUB_USER }}/model-serve:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/model-serve:${{ github.sha }}.${{ steps.minor-version.outputs.value }}
             ${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
           cache-to: type=inline
@@ -115,4 +120,4 @@ jobs:
       run: |
         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > kubeconfig.yaml
         export KUBECONFIG=kubeconfig.yaml
-        kubectl set image deployments/c-predict c-predict=${{ secrets.DOCKER_HUB_USER }}/model-serve:latest
+        kubectl set image deployments/c-predict c-predict=${{ secrets.DOCKER_HUB_USER }}/model-serve:${{ github.sha }}.${{ needs.package-model.outputs.minor-version }}
