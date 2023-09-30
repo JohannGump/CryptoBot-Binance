@@ -5,9 +5,11 @@
 <img src="https://github.com/JohannGump/CryptoBot-Binance/actions/workflows/model_rolling_update.yaml/badge.svg">
 </div>
 
+<br>
+
 Bot de trading de crypto-monnaies basé sur un modèle de Machine Learning. Projet réalisé dans le cadre de la formation MLOPs DataScientest, promotion Mai 2023.
 
-Auteurs - Johann, Julien Le Bot, Christopher Corbin
+_Auteurs - Johann, Julien Le Bot, Christopher Corbin_
 
 ## Architecture de la solution
 
