@@ -1,0 +1,15 @@
+name: model-deployment
+on:
+  repository_dispatch:
+    types:
+      - fit-models
+jobs:
+  test:
+    name: Test Webhook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: 'echo "field: ${{ github.event.client_payload.foo }}"'
+      - run: 'echo "payload: ${{ toJson(github.event.client_payload) }}"'
+      - run: echo "Trigger fit models"
+        if: github.event.action == 'fit-models'
