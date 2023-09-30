@@ -4,12 +4,56 @@ on:
     types:
       - fit-models
 jobs:
-  test:
-    name: Test Webhook
+
+  train-model:
+    name: Train models
     runs-on: ubuntu-latest
+    services:
+      database:
+        image: mysql:8.1.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: klines_history
+          MYSQL_ROOT_PASSWORD: password
     steps:
-      - uses: actions/checkout@v1
-      - run: 'echo "field: ${{ github.event.client_payload.foo }}"'
-      - run: 'echo "payload: ${{ toJson(github.event.client_payload) }}"'
-      - run: echo "Trigger fit models"
-        if: github.event.action == 'fit-models'
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: |
+            binance_bridge/requirements.txt
+            data/requirements.txt
+
+      - run: pip install -r binance_bridge/requirements.txt -r data/requirements.txt 
+
+      - name: Loads training data
+        env:
+          KLINESDB_HOST: localhost
+          KLINESDB_USER: root
+          KLINESDB_PASSWORD: password
+          KLINESDB_DBNAME: klines_history
+          KLINES_MAX_RECORDS_PER_SYTS: 5000
+        run: |
+          python data/build_history.py
+
+      - name: Fit models
+        run: |
+          docker run --rm \
+          --network ${{ job.container.network }} \
+          -v /model_fit:/src/model_fit \
+          -e KLINESDB_HOST=database \
+          -e KLINESDB_USER=root \
+          -e KLINESDB_PASSWORD=password \
+          -e KLINESDB_DBNAME=klines_history \
+          ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: models.${{ github.sha }}
+          path: /model_fit
