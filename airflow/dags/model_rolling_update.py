@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import requests
 
 @dag(start_date=datetime(2023, 9, 30),
-    schedule_interval='@once',
+    schedule_interval=timedelta(hours=24),
     catchup=False)
 def models_rolling_update():
     """
