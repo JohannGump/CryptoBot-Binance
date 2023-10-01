@@ -104,6 +104,7 @@ def get_detailed_precision():
     df_work = generate_df_work()
     result = df_work[['Symbol', 'TimeStep', 'precision']].groupby(by=['Symbol', 'TimeStep']).mean()
     result = result.reset_index()
+    result = result.dropna()
     create_detailed_table(klin_conn)
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for index, row in result.iterrows():
