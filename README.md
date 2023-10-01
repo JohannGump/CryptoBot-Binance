@@ -1,21 +1,15 @@
 
-<div align="left">
-<img src="./logo.png">
-<img src="https://github.com/JohannGump/CryptoBot-Binance/actions/workflows/kubernetes_cicd.yaml/badge.svg">
-<img src="https://github.com/JohannGump/CryptoBot-Binance/actions/workflows/model_rolling_update.yaml/badge.svg">
-</div>
+# [![CryptoBot](./logo.png)](http://51.158.67.16/) ![Deployment status](https://img.shields.io/github/actions/workflow/status/JohannGump/CryptoBot-Binance/kubernetes_cicd.yaml?label=Deployment&style=flat-square&labelColor=63748e) ![Rolling update status](https://img.shields.io/github/actions/workflow/status/JohannGump/CryptoBot-Binance/model_rolling_update.yaml?label=Rolling%20update&style=flat-square&labelColor=63748e)
 
-<br>
+Bot de support au trading de crypto-monnaies basé sur un modèle de Machine Learning. Projet réalisé dans le cadre de la formation MLOPs DataScientest, promotion Mai 2023.
 
-Bot de trading de crypto-monnaies basé sur un modèle de Machine Learning. Projet réalisé dans le cadre de la formation MLOPs DataScientest, promotion Mai 2023.
-
-_Auteurs - Johann, Julien Le Bot, Christopher Corbin_
+_Auteurs - Johann Ambrugeat, Julien Le Bot, Christopher Corbin_
 
 ## Architecture de la solution
 
 TODO: diagramme
 
-## Installation et lancement
+## 🚀 Installation et lancement
 
 **Pré-requis :**  Docker >= 24.0.5, Python >= 3.9.18
 
@@ -39,17 +33,26 @@ pip install -r model/requirements.txt
 pip install -r web_api/requirements.txt
 ```
 
-Executez le compose file pour ???
+Créez un network docker nommé _cryptobot-network_
+```sh
+docker network create cryptobot-network
+```
+
+Executez docker compose pour démarrer l'ensemble des services
 
 ```sh
 docker compose up
 ```
 
-Patientez 2/3 minutes puis naviguez à l'adresse suivante pour accéder à la vitrine de l'application: [http://localhost:8000](http://localhost:8000)
+Patientez quelques minutes (cela peu être long au premier démarrage), jusqu'a observer une sortie ressemblant à celle-ci
+
+    c-requester | [2023-10-01 17:20:22] [INFO] predict - WEEKLY predictions up to date, latest 2023-10-23 02:00:00
+
+Vous pouvez maintenant naviguer à l'adresse suivante pour accéder à la vitrine de l'application: [http://localhost:8000](http://localhost:8000)
 
 L'accès à l'interface Airflow est disponible ici (login: airflow, mdp: airflow): [http://localhost:8080](http://localhost:8080)
 
-## Organisation du code
+## 🗂️ Organisation du code
 
 - _airflow_ : dags airflows
 - _airflow-setup_ : manifests de déploiement d'Airflow sur le cluster Kubernetes
