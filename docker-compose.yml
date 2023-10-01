@@ -1,133 +1,22 @@
 version: '3.8'
-x-airflow-common: &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.1.1}
-  environment: &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ""
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-    AIRFLOW__CORE__LOAD_EXAMPLES: "true"
-    AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
-    AIRFLOW__SMTP__SMTP_HOST: "smtp.gmail.com"
-    AIRFLOW__SMTP__SMTP_PORT: 587
-    AIRFLOW__SMTP__SMTP_USER: "de.airflow@gmail.com"
-    AIRFLOW__SMTP__SMTP_PASSWORD: "cfsrvkongsobheta"
-    AIRFLOW__SMTP__SMTP_MAIL_FROM: "de.airflow@gmail.com"
-
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- pymongo}
-  volumes:
-    - ./airflow/dags:/opt/airflow/dags
-    - ./airflow/logs:/opt/airflow/logs
-    - ./airflow/plugins:/opt/airflow/plugins
-  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
-  depends_on:
-    redis:
-      condition: service_healthy
-    postgres:
-      condition: service_healthy
-  networks:
-    - cryptobot-network
-
 services:
-  postgres:
-    container_name: c-airflow-postgres
-    image: postgres:13
-    environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
-    volumes:
-      - postgres-db-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 5s
-      retries: 5
-    restart: always
+
+  wait-for-db:
+    image: atkrad/wait4x:latest
+    container_name: c-wait-for-db
+    command: tcp db:3306 -t 30s -i 250ms
     networks:
       - cryptobot-network
-
-  redis:
-    container_name: c-airflow-redis
-    image: redis:latest
-    ports:
-      - 6379:6379
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 30s
-      retries: 50
-    restart: always
+  
+  wait-model-serve:
+    image: atkrad/wait4x:latest
+    container_name: c-wait-model-serve
+    depends_on:
+      model-fit:
+        condition: service_completed_successfully
+    command: http http://model-serve:8501/v1/models/minutely --expect-status-code 200
     networks:
       - cryptobot-network
-
-  airflow-webserver:
-    <<: *airflow-common
-    container_name: c-airflow-airflow-webserver
-    command: webserver
-    ports:
-      - 8080:8080
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
-  airflow-scheduler:
-    <<: *airflow-common
-    container_name: c-airflow-airflow-scheduler
-    command: scheduler
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
-  airflow-worker:
-    <<: *airflow-common
-    container_name: c-airflow-airflow-worker
-    command: celery worker
-    healthcheck:
-      test:
-        - "CMD-SHELL"
-        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
-  airflow-init:
-    <<: *airflow-common
-    container_name: c-airflow-airflow-init
-    command: version
-    environment:
-      <<: *airflow-common-env
-      _AIRFLOW_DB_UPGRADE: "true"
-      _AIRFLOW_WWW_USER_CREATE: "true"
-      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
-      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-
-  flower:
-    <<: *airflow-common
-    container_name: c-airflow-flower
-    command: celery flower
-    ports:
-      - 5555:5555
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
-
 
   db:
     image: mysql:8.1.0
@@ -140,11 +29,6 @@ services:
       MYSQL_ROOT_PASSWORD: password
     ports:
       - '3306:3306'
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     volumes:
       - klines-data:/var/lib/mysql
     networks:
@@ -157,8 +41,8 @@ services:
       context: .
       dockerfile: ./data/Dockerfile
     depends_on:
-      db:
-        condition: service_healthy
+      wait-for-db:
+        condition: service_completed_successfully
     environment:
       KLINESDB_HOST: db
       KLINESDB_USER: root
@@ -224,6 +108,7 @@ services:
       MYSQL_DATABASE_PREDICTIONS: klines_history
       MYSQL_PASSWORD_PREDICTIONS: password
       PREDICT_SERVER_HOST: model-serve:8501
+      MIN_PREDICT_WINDOW: 7
     entrypoint: /bin/bash
     command:
       - -c
@@ -239,9 +124,9 @@ services:
             sleep 60
         done
     depends_on:
-      db:
-        condition: service_healthy
-      model-fit:
+      wait-for-db:
+        condition: service_completed_successfully
+      wait-model-serve:
         condition: service_completed_successfully
     volumes:
       - ./requester:/app
@@ -268,19 +153,52 @@ services:
     networks:
       - cryptobot-network
     depends_on:
-      db:
-        condition: service_healthy
+      wait-for-db:
+        condition: service_completed_successfully
+
+  airflow:
+    image: apache/airflow:2.7.1
+    command: standalone
+    container_name: c-airflow
+    ports:
+      - 8080:8080
+    environment:
+      _AIRFLOW_DB_UPGRADE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+      AIRFLOW__SMTP__SMTP_HOST: "smtp.gmail.com"
+      AIRFLOW__SMTP__SMTP_PORT: 587
+      AIRFLOW__SMTP__SMTP_USER: "de.airflow@gmail.com"
+      AIRFLOW__SMTP__SMTP_PASSWORD: "cfsrvkongsobheta"
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: "de.airflow@gmail.com"
+      _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+      MYSQL_HOST_PREDICTIONS: db
+      MYSQL_USER_PREDICTIONS: root
+      MYSQL_PASSWORD_PREDICTIONS: password
+      MYSQL_DATABASE_PREDICTIONS: klines_history
+      PREDICT_SERVER_HOST: model-serve:8051
+      WEB_API_HOST: web-api
+    depends_on:
+      wait-for-db:
+        condition: service_completed_successfully
+      wait-model-serve:
+        condition: service_completed_successfully
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+    user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
+    networks:
+      - cryptobot-network
 
 volumes:
   klines-data:
     name: klines-data
   model_fit:
     name: model_fit
-  postgres-db-volume:
 
 networks:
   cryptobot-network:
     external: false
-
-
-
