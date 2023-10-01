@@ -106,9 +106,9 @@ jobs:
       - name: Loads training data
         env:
           KLINESDB_HOST: localhost
-          KLINESDB_USER: root
-          KLINESDB_PASSWORD: password
-          KLINESDB_DBNAME: klines_history
+          KLINESDB_USER: ${{ secrets.MYSQL_USER_PREDICTIONS }}
+          KLINESDB_PASSWORD: ${{ secrets.MYSQL_PASSWORD_PREDICTIONS }}
+          KLINESDB_DBNAME: ${{ secrets.MYSQL_DATABASE_PREDICTIONS }}
           KLINES_MAX_RECORDS_PER_SYTS: 5000
         run: |
           python data/build_history.py
@@ -119,9 +119,9 @@ jobs:
           --network ${{ job.container.network }} \
           -v /model_fit:/src/model_fit \
           -e KLINESDB_HOST=database \
-          -e KLINESDB_USER=root \
-          -e KLINESDB_PASSWORD=password \
-          -e KLINESDB_DBNAME=klines_history \
+          -e KLINESDB_USER=${{ secrets.MYSQL_USER_PREDICTIONS }} \
+          -e KLINESDB_PASSWORD=${{ secrets.MYSQL_PASSWORD_PREDICTIONS }} \
+          -e KLINESDB_DBNAME=${{ secrets.MYSQL_DATABASE_PREDICTIONS }} \
           ${{ secrets.DOCKER_HUB_USER }}/model-fit:latest
 
       - name: Upload artifacts
