@@ -1,10 +1,9 @@
 from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.operators.python import PythonOperator
+import datetime
 import pandas as pd
 import mysql.connector
-import datetime
-import os
 
 my_dag = DAG(
     dag_id='check_precision_dag',
@@ -20,14 +19,13 @@ my_dag = DAG(
 
 
 klin_conn = {
-    'host': os.getenv('MYSQL_HOST_PREDICTIONS'), #db in prod
-    'user': os.getenv('MYSQL_USER_PREDICTIONS'),
-    'password': os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
-    'database': os.getenv('MYSQL_DATABASE_PREDICTIONS'),
+    'host': 'db', #db in prod
+    'user': 'root',
+    'password': 'password',
+    'database': 'klines_history',
     'port': "3306",
     'auth_plugin': 'mysql_native_password'
 }
-
 
 def sql_to_df(connector, table):    
     connexion = mysql.connector.connect(**connector)
@@ -106,6 +104,7 @@ def get_detailed_precision():
     df_work = generate_df_work()
     result = df_work[['Symbol', 'TimeStep', 'precision']].groupby(by=['Symbol', 'TimeStep']).mean()
     result = result.reset_index()
+    result = result.dropna()
     create_detailed_table(klin_conn)
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for index, row in result.iterrows():
@@ -116,6 +115,7 @@ def get_detailed_precision():
         """
         data = (date, row["Symbol"], row["TimeStep"], round(row["precision"], 2))
         insert_data(req, data, klin_conn)
+
 
 
 
@@ -130,5 +130,3 @@ my_task2 = PythonOperator(
     python_callable=get_detailed_precision,
     dag=my_dag
 )
-
-
