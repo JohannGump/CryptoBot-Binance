@@ -8,3 +8,5 @@ __pycache__
 airflow/logs/
 
 airflow/brouillon.ipynb
+airflow/brouillon.ipynb
+airflow/logs/dag_processor_manager/dag_processor_manager.log
