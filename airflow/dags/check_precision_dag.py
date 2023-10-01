@@ -23,15 +23,14 @@ klin_conn = {
     'host': os.getenv('MYSQL_HOST_PREDICTIONS'), #db in prod
     'user': os.getenv('MYSQL_USER_PREDICTIONS'),
     'password': os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
-    'database': os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
-    'port': "3306",
+    'database': os.getenv('MYSQL_DATABASE_PREDICTIONS'),
     'auth_plugin': 'mysql_native_password'
 }
 
 def sql_to_df(connector, table):    
     connexion = mysql.connector.connect(**connector)
     curseur = connexion.cursor()
-    requete_sql = f"SELECT * FROM {table} WHERE TimeStep != 'WEEKLY'"
+    requete_sql = f"SELECT * FROM {table}"
     curseur.execute(requete_sql)
     dataframe = pd.DataFrame(curseur.fetchall(), columns=curseur.column_names)
     curseur.close()

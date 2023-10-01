@@ -20,7 +20,7 @@ def test_services_dag():
             host=os.getenv('MYSQL_HOST_PREDICTIONS'),
             user=os.getenv('MYSQL_USER_PREDICTIONS'),
             password=os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
-            database=os.getenv('MYSQL_PASSWORD_PREDICTIONS') 
+            database=os.getenv('MYSQL_DATABASE_PREDICTIONS') 
         )
         curs = conn.cursor()
         curs.execute("SELECT * FROM predictions LIMIT 1")
