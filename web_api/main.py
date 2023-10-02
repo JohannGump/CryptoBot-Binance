@@ -34,13 +34,16 @@ templates = Jinja2Templates(directory="templates", context_processors=[template_
 TemplateResponse = templates.TemplateResponse
 
 def connect():
-    conn = mysql.connector.connect(
-        host=os.getenv('MYSQL_HOST_PREDICTIONS'),
-        user=os.getenv('MYSQL_USER_PREDICTIONS'),
-        password=os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
-        database=os.getenv('MYSQL_DATABASE_PREDICTIONS')
-    )
-    return conn
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv('MYSQL_HOST_PREDICTIONS'),
+            user=os.getenv('MYSQL_USER_PREDICTIONS'),
+            password=os.getenv('MYSQL_PASSWORD_PREDICTIONS'),
+            database=os.getenv('MYSQL_DATABASE_PREDICTIONS')
+        )
+        return conn
+    except Exception as e:
+        pass
 
 def tmpl_context(request: Request) -> Dict[str, Any]:
     """Jinja template context mixin"""
@@ -58,6 +61,10 @@ def index(context = TemplateVars) -> HTMLResponse:
         now = now - timedelta(days=1)
     now_4days = (now + timedelta(days=4))
     dbconn = connect()
+    if not dbconn:
+        tmpl_vars = context(message=f"Navré, service momentanément indisponible")
+        return templates.TemplateResponse("error.html", tmpl_vars, status_code=204)
+
     cursor = dbconn.cursor(dictionary=True)
     query = """
     SELECT KL.ClosePrice NowClosePrice, PR.*
@@ -83,6 +90,10 @@ def index(context = TemplateVars) -> HTMLResponse:
 @app.get('/forecast/{symbol}/{timestep}')
 def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars) -> HTMLResponse:
     dbconn = connect()
+    if not dbconn:
+        tmpl_vars = context(message=f"Navré, service momentanément indisponible")
+        return templates.TemplateResponse("error.html", tmpl_vars, status_code=204)
+
     cursor = dbconn.cursor(dictionary=True)
 
     # Select most recent klines
@@ -98,6 +109,10 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     """
     cursor.execute(query, [symbol.name, timestep.name, symbol.name, timestep.name])
     klines = cursor.fetchall()
+    if len(klines) < 4:
+        tmpl_vars = context(message=f"Navré, aucune données disponibles pour {symbol.name}")
+        return templates.TemplateResponse("error.html", tmpl_vars, status_code=200)
+
     last_k = klines[-1].get('OpenTime')
 
     query = """
