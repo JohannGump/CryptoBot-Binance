@@ -34,6 +34,5 @@ def example_data():
 
 def test_vwap(example_data):
     result = vwap(example_data)
-    expected_result = np.array([1.6666666, 2.2857144], dtype=np.float32)
-
-    np.testing.assert_allclose(result, expected_result, rtol=1e-6)
+    expected_result = tf.constant([3., 3.5454545], dtype=tf.float32)
+    tf.debugging.assert_near(result, expected_result, atol=1e-6)

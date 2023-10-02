@@ -1,8 +1,7 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath("./model"))
-sys.path.insert(0, os.path.abspath("./binance_bridge"))
+sys.path.insert(0, os.path.abspath("./"))
 from data.build_history import timestep_delta_unit, timestep_to_seconds
 from binance_bridge.schemas import TimeStep
 
