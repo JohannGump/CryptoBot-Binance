@@ -183,7 +183,9 @@ def precision(context = TemplateVars) -> HTMLResponse:
     dbconn = connect()
     cursor = dbconn.cursor(dictionary=True)
     query = """
-    SELECT * from hist_detailed_precision
+    SELECT K.OpenTime as 'date', K.Symbol as 'symbol', K.TimeStep as timestep, ((ABS(P.ClosePrice - K.ClosePrice) / K.ClosePrice) * 100) AS precision_rate
+    FROM predictions P
+    JOIN klines K ON K.OpenTime = P.OpenTime AND K.Symbol = P.Symbol AND K.TimeStep = P.TimeStep;
     """
     cursor.execute(query)
     datas = cursor.fetchall()
@@ -194,17 +196,15 @@ def precision(context = TemplateVars) -> HTMLResponse:
     symbols = set(entry['symbol'] for entry in datas)
     #timesteps = set(entry['timestep'] for entry in datas)
 
-    timesteps = ['MINUTELY', 'HOURLY', 'DAILY']
+    timesteps = [ts.name for ts in TimeStep]
 
     # Créez une sous-figure avec Plotly
-    fig = make_subplots(rows=len(symbols), cols=1, subplot_titles=[])
+    fig = make_subplots(rows=len(symbols), cols=1, subplot_titles=timesteps)
 
     j = 1
 
-    for i, timestep in enumerate (timesteps):
-
+    for i, timestep in enumerate(timesteps):
         for symbol in symbols:
-        
             # Filtrer les données pour le symbole et le délai actuels
             subset = [entry for entry in datas if entry['symbol'] == symbol and entry['timestep'] == timestep]
 
@@ -214,13 +214,12 @@ def precision(context = TemplateVars) -> HTMLResponse:
 
             # Créer une trace de ligne avec Plotly pour le sous-graphique actuel
             trace = go.Scatter(x=dates, y=precision_rates, mode='lines+markers', name=symbol + " - " + timestep)
-            #data.append(trace)
 
             # Ajouter la trace au sous-graphique correspondant
             fig.add_trace(trace, row=i+1, col=j)
 
         # Mettre à jour les titres des sous-graphiques
-        fig.update_xaxes(title_text='Minutes', row=i+1, col=j)
+        fig.update_xaxes(title_text=None, row=i+1, col=j)
         fig.update_yaxes(title_text='Taux d\'erreur de précision', row=i+1, col=j)
 
     # Mettre à jour la disposition de la figure
@@ -230,8 +229,7 @@ def precision(context = TemplateVars) -> HTMLResponse:
 
     plot_json = pjson.to_json_plotly(fig)
 
-    tmpl_vars = context(
-        plot_json=plot_json)
+    tmpl_vars = context(plot_json=plot_json)
 
     return TemplateResponse('precision.html', tmpl_vars)
 
