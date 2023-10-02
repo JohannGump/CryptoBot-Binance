@@ -24,7 +24,7 @@ spec:
       targetPort: 8501
   selector:
     app: c-predict
-  type: LoadBalancer
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
@@ -38,4 +38,4 @@ spec:
       targetPort: 3306
   selector:
     app: db
-  type: LoadBalancer
+  type: ClusterIP
