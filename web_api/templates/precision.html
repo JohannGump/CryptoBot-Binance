@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script id="plotly-lib" src="https://cdn.plot.ly/plotly-latest.min.js" async></script>
+{% endblock %}
+
+{% block content %}
+
+
+
+<div id="forecast-chart-container" class="mt-8"></div>
+    <div id="forecast-chart" class="h-72 row-start-2 col-span-2 flex justify-center items-center transition-opacity duration-1000 opacity-20">
+        <div id="spinner" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div>
+</div>
+
+<script>
+    document.querySelector("#plotly-lib").onload = () => {
+        setTimeout(() => {
+            document.querySelector("#spinner").remove()
+            var graph = {{ plot_json | safe }};
+            Plotly.plot('forecast-chart', graph, {});
+            requestAnimationFrame(() => {
+                // document.querySelector(".modebar-container").remove()
+                document.querySelector("#forecast-chart").classList.add('opacity-100')
+                document.querySelector("#forecast-legend").classList.add('opacity-100')
+            })
+        }, 800)
+    }
+    </script>
+{% endblock %}

@@ -10,6 +10,7 @@ import mysql.connector
 import uvicorn
 import plotly.graph_objs as go
 import plotly.io.json as pjson
+from plotly.subplots import make_subplots
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timedelta
@@ -47,6 +48,16 @@ def tmpl_context(request: Request) -> Dict[str, Any]:
     return lambda **kwargs: {**kwargs, 'request': request}
 
 TemplateVars = Depends(tmpl_context)
+
+def sql_to_df(table):    
+    dbconn = connect()
+    cursor = dbconn.cursor(dictionary=True)
+    requete_sql = f"SELECT * FROM {table}"
+    cursor.execute(requete_sql)
+    dataframe = pd.DataFrame(cursor.fetchall(), columns=cursor.column_names)
+    cursor.close()
+    cursor.close()
+    return dataframe
 
 @app.get('/')
 def index(context = TemplateVars) -> HTMLResponse:
@@ -161,6 +172,86 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     )
     return templates.TemplateResponse("forecast.html", tmpl_vars)
 
+@app.get('/precision')
+def precision(context = TemplateVars) -> HTMLResponse:
+
+    dbconn = connect()
+    cursor = dbconn.cursor(dictionary=True)
+    query = """
+    SELECT * from hist_detailed_precision
+    """
+    cursor.execute(query)
+    datas = cursor.fetchall()
+    cursor.close()
+    dbconn.close()
+
+    # dates = [x['date'] for x in datas]
+    # data_precision = [x['precision_rate'] for x in datas]
+
+    # fig = go.Figure(
+    #     data = [
+    #         go.Line(x=dates, y=data_precision, line_color='orange', mode='lines+markers+text', name='')
+    #     ],
+    #     layout = go.Layout(
+    #         paper_bgcolor='rgba(0,0,0,0)',
+    #         plot_bgcolor='rgba(0,0,0,0)',
+    #         margin={ 't': 0, 'r': 0, 'b': 0, 'l': 0 },
+    #         showlegend=False,
+    #         yaxis_title=None,
+    #         xaxis_title=None
+    #     )
+    # )
+    # fig.update_yaxes(gridcolor='rgba(0,0,0,.1)')
+    # fig.update_xaxes(showgrid=False)
+
+    # Extraction des symboles uniques et des délais uniques
+    symbols = set(entry['symbol'] for entry in datas)
+    timesteps = set(entry['timestep'] for entry in datas)
+
+    # Créez une sous-figure avec Plotly
+    fig = make_subplots(rows=len(symbols), cols=len(timesteps), subplot_titles=[])
+    
+    j = 1
+    # Boucle sur les symboles uniques
+    for symbol in symbols:
+        i = 1
+        # Boucle sur les délais uniques
+        for timestep in timesteps:
+        
+            # Filtrer les données pour le symbole et le délai actuels
+            subset = [entry for entry in datas if entry['symbol'] == symbol and entry['timestep'] == timestep]
+
+            # Extraire les dates et les taux de précision pour le sous-graphique actuel
+            dates = [entry['date'] for entry in subset]
+            precision_rates = [entry['precision_rate'] for entry in subset]
+
+            # Créer une trace de ligne avec Plotly pour le sous-graphique actuel
+            trace = go.Scatter(x=dates, y=precision_rates, mode='lines+markers', name=symbol + " - " + timestep)
+            
+            # # Ajouter la trace au sous-graphique correspondant
+            fig.add_trace(trace, row=j, col=i)
+
+            # Mettre à jour les titres des sous-graphiques
+            fig.update_xaxes(title_text='Date', row=i, col=1)
+            fig.update_yaxes(title_text='Taux de précision', row=i, col=1)
+
+            i += 1
+        j += 1
+
+    # Mettre à jour la disposition de la figure
+    fig.update_layout(showlegend=True)
+    fig.update_layout(height=600, width=1400)
+
+
+    plot_json = pjson.to_json_plotly(fig)
+
+    tmpl_vars = context(
+        plot_json=plot_json)
+
+    return TemplateResponse('precision.html', tmpl_vars)
+
+
 # Lancer l'application FastAPI
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+    
