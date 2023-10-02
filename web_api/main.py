@@ -10,6 +10,7 @@ import mysql.connector
 import uvicorn
 import plotly.graph_objs as go
 import plotly.io.json as pjson
+from plotly.subplots import make_subplots
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timedelta
@@ -175,6 +176,64 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
         plot_json=plot_json
     )
     return templates.TemplateResponse("forecast.html", tmpl_vars)
+
+@app.get('/precision')
+def precision(context = TemplateVars) -> HTMLResponse:
+
+    dbconn = connect()
+    cursor = dbconn.cursor(dictionary=True)
+    query = """
+    SELECT * from hist_detailed_precision
+    """
+    cursor.execute(query)
+    datas = cursor.fetchall()
+    cursor.close()
+    dbconn.close()
+
+    # Extraction des symboles uniques et des délais uniques
+    symbols = set(entry['symbol'] for entry in datas)
+    #timesteps = set(entry['timestep'] for entry in datas)
+
+    timesteps = ['MINUTELY', 'HOURLY', 'DAILY']
+
+    # Créez une sous-figure avec Plotly
+    fig = make_subplots(rows=len(symbols), cols=1, subplot_titles=[])
+
+    j = 1
+
+    for i, timestep in enumerate (timesteps):
+
+        for symbol in symbols:
+        
+            # Filtrer les données pour le symbole et le délai actuels
+            subset = [entry for entry in datas if entry['symbol'] == symbol and entry['timestep'] == timestep]
+
+            # Extraire les dates et les taux de précision pour le sous-graphique actuel
+            dates = [entry['date'] for entry in subset]
+            precision_rates = [entry['precision_rate'] for entry in subset]
+
+            # Créer une trace de ligne avec Plotly pour le sous-graphique actuel
+            trace = go.Scatter(x=dates, y=precision_rates, mode='lines+markers', name=symbol + " - " + timestep)
+            #data.append(trace)
+
+            # Ajouter la trace au sous-graphique correspondant
+            fig.add_trace(trace, row=i+1, col=j)
+
+        # Mettre à jour les titres des sous-graphiques
+        fig.update_xaxes(title_text='Minutes', row=i+1, col=j)
+        fig.update_yaxes(title_text='Taux d\'erreur de précision', row=i+1, col=j)
+
+    # Mettre à jour la disposition de la figure
+    fig.update_layout(showlegend=True)
+    fig.update_layout(height=1200)
+
+
+    plot_json = pjson.to_json_plotly(fig)
+
+    tmpl_vars = context(
+        plot_json=plot_json)
+
+    return TemplateResponse('precision.html', tmpl_vars)
 
 # Lancer l'application FastAPI
 if __name__ == "__main__":
