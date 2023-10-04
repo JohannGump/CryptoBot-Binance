@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script id="plotly-lib" src="https://cdn.plot.ly/plotly-latest.min.js" async></script>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="text-xl font-light mb-10">Evolution des taux d'erreur des prédictions</h1>
+
+<div id="plots-container" class="flex-col justify-center items-center transition-opacity duration-1000 opacity-20">
+    <div id="spinner" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    {% for plot in pred_error_plots %}
+    <h2 class="flex p-1 px-2 text-xs bg-slate-200 text-slate-500">
+        {{ plot.title }}
+        <span class="ml-auto">moy. <span class="font-bold">{{ "%.1f" % (plot.mean_error) }}%</span></span>
+    </h2>
+    <div id="plot-{{ loop.index0 }}" class="mt-4 mb-8"></div>
+    {% endfor %}
+</div>
+
+<hr>
+
+<h1 class="text-xl font-light my-10">Taux de bonnes prédictions des Signaux</h1>
+
+<table class="w-full mb-24">
+    <thead>
+        <tr>
+            <th></th>
+            {% set bgd = ['#5052F8', '#E83D2E', '#19C584', '#9943F8', '#FD8F49'] %}
+            {% set bgl = ['#A1A5FC', '#F3988C', '#71E3BF', '#CA9DFC', '#FEC59D'] %}
+            {% for s, np in pred_error_plots[0].signals.items() %}
+            <th class="text-left text-sm font-normal">
+                <div class="text-center" style="background: {{ bgd[loop.index0] }}; color: white">{{ s }}</div>
+                <div class="flex" style="background: {{ bgl[loop.index0] }}; color: white">
+                    <span class="w-1/2 text-center">↗</span>
+                    <span class="w-1/2 text-center">↘</span>
+                </div>
+            </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for plot in pred_error_plots %}
+        <tr class="border-b-4 border-white bg-slate-100">
+            <td class="text-cs py-2 pl-4 text-xs bg-slate-200 text-slate-500">{{ plot.title }}</td>
+            {% for s, np in plot.signals.items() %}
+            <td class="text-left text-sm font-normal" style="color: {{ bgd[loop.index0] }}">
+                <div class="flex">
+                    <span class="w-1/2 text-center">{{ "%.1f" % (np.pos[0]) }}% <sub style="font-size: 9px">/{{ np.pos[1] }}</sub></span>
+                    <span class="w-1/2 text-center">{{ "%.1f" % (np.neg[0]) }}% <sub style="font-size: 9px">/{{ np.neg[1] }}</sub></span>
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<script>
+    document.querySelector("#plotly-lib").onload = () => {
+        setTimeout(() => {
+            document.querySelector("#spinner").remove()
+            {% for plot in pred_error_plots %}
+            Plotly.plot('plot-{{ loop.index0 }}', {{ plot.json_plot | safe }}, {});
+            {% endfor %}
+            requestAnimationFrame(() => {
+                document.querySelectorAll(".modebar-container").forEach(el => el.remove())
+                document.querySelector("#plots-container").classList.add('opacity-100')
+            })
+        }, 800)
+    }
+</script>
+{% endblock %}

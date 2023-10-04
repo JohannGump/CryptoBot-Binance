@@ -16,6 +16,30 @@ from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, Any
+import secrets
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
+security = HTTPBasic()
+
+def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
+    current_username_bytes = credentials.username.encode("utf8")
+    correct_username_bytes = b"cryptobot"
+    is_correct_username = secrets.compare_digest(
+        current_username_bytes, correct_username_bytes
+    )
+    current_password_bytes = credentials.password.encode("utf8")
+    correct_password_bytes = b"cryptic"
+    is_correct_password = secrets.compare_digest(
+        current_password_bytes, correct_password_bytes
+    )
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 SymbolSlug = Enum('SymbolSlug', {s.name:s.name.lower() for s in Symbol})
 TimeStepSlug = Enum('TimeStepSlug', {s.name:s.name.lower() for s in TimeStep})
@@ -178,7 +202,7 @@ def forecast(symbol: SymbolSlug, timestep: TimeStepSlug, context = TemplateVars)
     return templates.TemplateResponse("forecast.html", tmpl_vars)
 
 @app.get('/precision')
-def precision(context = TemplateVars) -> HTMLResponse:
+def precision(context = TemplateVars, credentials: HTTPBasicCredentials = Depends(security)) -> HTMLResponse:
 
     dbconn = connect()
     cursor = dbconn.cursor(dictionary=True)
@@ -232,6 +256,109 @@ def precision(context = TemplateVars) -> HTMLResponse:
     tmpl_vars = context(plot_json=plot_json)
 
     return TemplateResponse('precision.html', tmpl_vars)
+
+@app.get('/model-stats')
+def precision(context = TemplateVars, credentials: HTTPBasicCredentials = Depends(security)) -> HTMLResponse:
+    dbconn = connect()
+    cursor = dbconn.cursor(dictionary=True)
+
+    # Signals
+    query = """
+    SELECT S.Symbol, S.TimeStep, S.k_signal, S.OK, COUNT(S.OK) AS OK_count FROM (
+        SELECT R.*, R.k_signal = p_signal AS OK
+        FROM (
+            SELECT P.Symbol, P.TimeStep,
+                CASE WHEN (K.ClosePrice - K.OpenPrice) >= 0 THEN 'neg' ELSE 'pos' END AS k_signal,
+                CASE WHEN (P.ClosePrice - K.OpenPrice) >= 0 THEN 'neg' ELSE 'pos' END AS p_signal
+            FROM predictions AS P
+            JOIN klines K ON K.OpenTime = P.OpenTime AND K.Symbol = P.Symbol AND K.TimeStep = P.TimeStep
+        ) AS R
+    ) AS S
+    GROUP BY S.Symbol, S.TimeStep, S.k_signal, S.OK
+    ORDER BY S.Symbol, S.TimeStep, S.k_signal, S.OK
+    """
+    cursor.execute(query)
+    res = cursor.fetchall()
+    # return res
+    signals = {ts.name: {sy.name: {'neg': 0, 'pos': 0} for sy in Symbol} for ts in TimeStep}
+    for row in res:
+        sig = signals[row['TimeStep']][row['Symbol']]
+        sig[row['k_signal']]+= row['OK_count']
+
+    for row in res:
+        if row['OK']:
+            sig = signals[row['TimeStep']][row['Symbol']]
+            tot = sig[row['k_signal']]
+            sig[row['k_signal']] = (row['OK_count'] / tot, tot)
+
+    for ts in TimeStep:
+        for sy in Symbol:
+            sig = signals[ts.name][sy.name]
+            vneg = sig['neg'][1] if isinstance(sig['neg'], tuple) else sig['neg']
+            vpos = sig['pos'][1] if isinstance(sig['pos'], tuple) else sig['pos']
+            sig['neg'] = (sig['neg'][0] * 100 if isinstance(sig['neg'], tuple) else 0, vneg)
+            sig['pos'] = (sig['pos'][0] * 100 if isinstance(sig['pos'], tuple) else 0, vpos)
+    
+    # Mean errors
+    query = """
+    SELECT K.TimeStep as title,
+           (AVG((ABS(P.ClosePrice - K.ClosePrice) / K.ClosePrice) * 100)) AS mean_error
+      FROM predictions P
+      JOIN klines K ON K.OpenTime = P.OpenTime AND K.Symbol = P.Symbol AND K.TimeStep = P.TimeStep
+     GROUP BY K.TimeStep
+     ORDER BY K.TimeStep
+    """
+
+    cursor.execute(query)
+    mean_errors = cursor.fetchall()
+
+    # Error rate
+    query = """
+    SELECT K.OpenTime, K.Symbol, K.TimeStep,
+           ((ABS(P.ClosePrice - K.ClosePrice) / K.ClosePrice) * 100) AS PError
+      FROM predictions P
+      JOIN klines K ON K.OpenTime = P.OpenTime AND K.Symbol = P.Symbol AND K.TimeStep = P.TimeStep
+     WHERE K.TimeStep = %s
+     ORDER BY K.Symbol, K.OpenTime
+    """
+
+    plots = []
+    layout = go.Layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin={ 't': 0, 'r': 0, 'b': 0, 'l': 0 },
+        showlegend=False,
+        yaxis_title=None,
+        xaxis_title=None)
+
+    for i, timestep in enumerate(TimeStep):
+        cursor.execute(query, [timestep.name])
+        res = cursor.fetchall()
+        traces = []
+        for symbol in Symbol:
+            data = [row for row in res if row['Symbol'] == symbol.name]
+            dats = [row['OpenTime'] for row in data]
+            vals = [row['PError'] for row in data]
+            trace = go.Scatter(x=dats, y=vals, mode='lines', name=symbol.name)
+            traces.append(trace)
+
+        fig = go.Figure(data=traces, layout=layout)
+        fig.update_yaxes(gridcolor='rgba(0,0,0,.1)', title_text='% erreur pred.')
+        fig.update_xaxes(showgrid=False)
+        fig.update_layout(showlegend=True, height=200,
+            legend=dict(yanchor="top", y=1))
+        plots.append({
+            'title': timestep.name,
+            'json_plot': pjson.to_json_plotly(fig),
+            'mean_error': mean_errors[i]['mean_error'],
+            'signals': signals[timestep.name]
+        })
+
+    cursor.close()
+    dbconn.close()
+
+    tmpl_vars = context(pred_error_plots=plots)
+    return TemplateResponse('model-stats.html', tmpl_vars)
 
 # Lancer l'application FastAPI
 if __name__ == "__main__":
